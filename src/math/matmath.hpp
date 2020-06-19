@@ -2,12 +2,12 @@
 #pragma once
 
 #include <cstring>
-#include "vecfloat.hpp"
+#include "vecmath.hpp"
 
 
 struct mat2f
 {
-	float data[2][2];
+	data_t data[2][2];
 	mat2f() {
 		memset(data, 0, sizeof data);
 	}
@@ -16,17 +16,17 @@ struct mat2f
 		data[0][0] = a.x; data[1][0] = a.y;
 		data[0][1] = b.x; data[1][1] = b.y;
 	}
-	float* operator[](unsigned i) {
+	data_t* operator[](unsigned i) {
 		return data[i];
 	}
-	float const* operator[](unsigned i) const {
+	data_t const* operator[](unsigned i) const {
 		return data[i];
 	}
 };
 
 struct mat3f
 {
-	float data[3][3];
+	data_t data[3][3];
 	mat3f() {
 		memset(data, 0, sizeof data);
 	}
@@ -36,17 +36,17 @@ struct mat3f
 		data[0][1] = b.x; data[1][1] = b.y; data[2][1] = b.z;
 		data[0][2] = c.x; data[1][2] = c.y; data[2][2] = c.z;
 	}
-	float* operator[](unsigned i) {
+	data_t* operator[](unsigned i) {
 		return data[i];
 	}
-	float const* operator[](unsigned i) const {
+	data_t const* operator[](unsigned i) const {
 		return data[i];
 	}
 };
 
 struct mat4f
 {
-	float data[4][4];
+	data_t data[4][4];
 	mat4f() {
 		memset(data, 0, sizeof data);
 	}
@@ -57,15 +57,15 @@ struct mat4f
 		data[0][2] = c.x; data[1][2] = c.y; data[2][2] = c.z; data[3][2] = c.w;
 		data[0][3] = d.x; data[1][3] = d.y; data[2][3] = d.z; data[3][3] = d.w;
 	}
-	mat4f(float k00, float k01, float k02, float k03,
-		  float k10, float k11, float k12, float k13,
-		  float k20, float k21, float k22, float k23,
-		  float k30, float k31, float k32, float k33):
+	mat4f(data_t k00, data_t k01, data_t k02, data_t k03,
+		  data_t k10, data_t k11, data_t k12, data_t k13,
+		  data_t k20, data_t k21, data_t k22, data_t k23,
+		  data_t k30, data_t k31, data_t k32, data_t k33):
 		data{k00,k01,k02,k03,k10,k11,k12,k13,k20,k21,k22,k23,k30,k31,k32,k33} {}
-	float* operator[](unsigned i) {
+	data_t* operator[](unsigned i) {
 		return data[i];
 	}
-	float const* operator[](unsigned i) const {
+	data_t const* operator[](unsigned i) const {
 		return data[i];
 	}
 	static const mat4f unit;
@@ -81,10 +81,10 @@ mat3f operator - (const mat3f& a, const mat3f& b);
 mat3f& operator -= (mat3f& a, const mat3f& b);
 mat4f operator - (const mat4f& a, const mat4f& b);
 mat4f& operator -= (mat4f& a, const mat4f& b);
-mat3f operator * (float k, const mat3f& b);
-mat3f& operator *= (mat3f& a, float k);
-mat4f operator * (float k, const mat4f& b);
-mat4f& operator *= (mat4f& a, float k);
+mat3f operator * (data_t k, const mat3f& b);
+mat3f& operator *= (mat3f& a, data_t k);
+mat4f operator * (data_t k, const mat4f& b);
+mat4f& operator *= (mat4f& a, data_t k);
 
 // matrix-matrix multiplication
 mat3f operator * (const mat3f& a, const mat3f& b);
@@ -102,8 +102,8 @@ mat4f transposed(const mat4f& a);
 mat3f diag(int x, int y, int z);
 mat4f diag(int x, int y, int z, int w);
 
-float det(mat2f a);
-float det(mat3f a);
+data_t det(mat2f a);
+data_t det(mat3f a);
 mat2f inverse(mat2f a);
 mat3f inverse(mat3f a);
 mat4f inverse(mat4f a);
@@ -180,7 +180,7 @@ inline mat4f& operator -= (mat4f& a, const mat4f& b)
 	return a;
 }
 // const multiplication
-inline mat3f operator * (float k, const mat3f& b)
+inline mat3f operator * (data_t k, const mat3f& b)
 {
 	mat3f res;
 	for (int i=0; i<3; ++i)
@@ -188,14 +188,14 @@ inline mat3f operator * (float k, const mat3f& b)
 			res[i][j] = k * b[i][j];
 	return res;
 }
-inline mat3f& operator *= (mat3f& a, float k)
+inline mat3f& operator *= (mat3f& a, data_t k)
 {
 	for (int i=0; i<3; ++i)
 		for (int j=0; j<3; ++j)
 			a[i][j] *= k;
 	return a;
 }
-inline mat4f operator * (float k, const mat4f& b)
+inline mat4f operator * (data_t k, const mat4f& b)
 {
 	mat4f res;
 	for (int i=0; i<4; ++i)
@@ -203,7 +203,7 @@ inline mat4f operator * (float k, const mat4f& b)
 			res[i][j] = k * b[i][j];
 	return res;
 }
-inline mat4f& operator *= (mat4f& a, float k)
+inline mat4f& operator *= (mat4f& a, data_t k)
 {
 	for (int i=0; i<4; ++i)
 		for (int j=0; j<4; ++j)
@@ -300,12 +300,12 @@ inline mat4f diag(int x, int y, int z, int w)
 }
 
 
-inline float det(mat2f a)
+inline data_t det(mat2f a)
 {
 	return a[0][0] * a[1][1] - a[0][1] * a[1][0];
 }
 
-inline float det(mat3f a)
+inline data_t det(mat3f a)
 {
 	return
 		+ a[0][0] * a[1][1] * a[2][2]
@@ -318,7 +318,7 @@ inline float det(mat3f a)
 
 inline mat2f inverse(mat2f a)
 {
-	float invdet = 1/det(a);
+	data_t invdet = 1/det(a);
 	mat2f res;
 	res[0][0] = a[1][1] * invdet;
 	res[1][1] = a[0][0] * invdet;
@@ -329,7 +329,7 @@ inline mat2f inverse(mat2f a)
 
 inline mat3f inverse(mat3f a)
 {
-	float invdet = 1/det(a);
+	data_t invdet = 1/det(a);
 	mat3f res;
 	for (int i=0; i<3; ++i)
 		for (int j=0; j<3; ++j)

@@ -1,6 +1,6 @@
 
 #include <assert.h>
-#include "matfloat.hpp"
+#include "matmath.hpp"
 
 
 const mat4f mat4f::unit(vec4f(1,0,0,0),vec4f(0,1,0,0),vec4f(0,0,1,0),vec4f(0,0,0,1));
@@ -13,9 +13,9 @@ const mat4f mat4f::unit(vec4f(1,0,0,0),vec4f(0,1,0,0),vec4f(0,0,1,0),vec4f(0,0,0
 
 namespace
 {
-static inline void invert4x4(const float * src, float * dst)
+static inline void invert4x4(const data_t * src, data_t * dst)
 {
-    float det;
+    data_t det;
 
     /* Compute adjoint: */
 
@@ -177,7 +177,7 @@ static inline void invert4x4(const float * src, float * dst)
 mat4f inverse(mat4f a)
 {
     // a,b should be either row-major or column-major
-    assert(sizeof(a) == 16*sizeof(float));
+    assert(sizeof(a) == 16*sizeof(data_t));
     mat4f b;
     invert4x4(a[0], b[0]);
     return b;
