@@ -6,7 +6,7 @@ Approximate a mesh by bounding it with a set of spheres, using method described 
 
 [*Variational Sphere set Approximation for Solid Objects*](http://dx.doi.org/10.1007/s00371-006-0052-0)
 
-The SOTV defined in the paper is bugfixed (therefore results might not be identical).
+The SOTV defined in this paper is bugfixed (therefore results might not be identical).
 
 ### 预处理
 

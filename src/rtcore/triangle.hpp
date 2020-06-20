@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aabox.hpp"
 #include "math/matmath.hpp"
 #include "ray.hpp"
 
@@ -43,18 +44,17 @@ public:
 		return false;
 	}
 
-
-	// AABox boundingVolume() const
-	// {
-	// 	AABox v;
-	// 	v.x1 = std::min(v1.x, std::min(v2.x, v3.x));
-	// 	v.x2 = std::max(v1.x, std::max(v2.x, v3.x));
-	// 	v.y1 = std::min(v1.y, std::min(v2.y, v3.y));
-	// 	v.y2 = std::max(v1.y, std::max(v2.y, v3.y));
-	// 	v.z1 = std::min(v1.z, std::min(v2.z, v3.z));
-	// 	v.z2 = std::max(v1.z, std::max(v2.z, v3.z));
-	// 	return v;
-	// }
+	AABox boundingVolume() const
+	{
+		AABox v;
+		v.x1 = std::min(v1.x, std::min(v2.x, v3.x));
+		v.x2 = std::max(v1.x, std::max(v2.x, v3.x));
+		v.y1 = std::min(v1.y, std::min(v2.y, v3.y));
+		v.y2 = std::max(v1.y, std::max(v2.y, v3.y));
+		v.z1 = std::min(v1.z, std::min(v2.z, v3.z));
+		v.z2 = std::max(v1.z, std::max(v2.z, v3.z));
+		return v;
+	}
 
 private:
 	bool onsurface(const point& p) const {
