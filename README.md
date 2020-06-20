@@ -1,12 +1,12 @@
-Implementation of
+# Sphere Set Approximation
 
-*Variational Sphere set Approximation for Solid Objects*
+**WORK IN PROGRESS**
 
-Rui Wang Kun Zhou John Snyder Xinguo Liu Hujun Bao Qunsheng Peng Baining Guo 
+Approximate a mesh by bounding it with a set of spheres, using method described in
 
-The Visual Computer | August 2006
+[*Variational Sphere set Approximation for Solid Objects*](http://dx.doi.org/10.1007/s00371-006-0052-0)
 
-[View Publication](http://dx.doi.org/10.1007/s00371-006-0052-0)
+The SOTV defined in the paper is bugfixed (therefore results might not be identical).
 
 ### 预处理
 

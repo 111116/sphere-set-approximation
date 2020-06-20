@@ -38,7 +38,7 @@ int main()
 	// console.log(sotv_sampled(a,b,c,o,r));
 	// console.log(sotv_sampled(a,b,c,o,r));
 
-	srand(19260817);
+	srand(time(0));
 
 	for (int i=0; i<1000; ++i)
 	{

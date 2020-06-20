@@ -6,8 +6,6 @@
 #include <cmath>
 #include <algorithm>
 #include "math/vecmath.hpp"
-#include "consolelog.hpp"
-#include "sotv_ref.hpp"
 
 class SOTV
 {
