@@ -11,9 +11,9 @@
 // parameters: triangle vertices, sphere center & radius
 double sotv_sampled(vec3f v1, vec3f v2, vec3f v3, vec3f o, double r)
 {
-	const int nsample = 1000000;
+	const int nsample = 10000000;
 	RTcore::Triangle trig(v1,v2,v3);
-	RTcore::MT19937Sampler sampler;
+	RTcore::MT19937Sampler sampler(rand());
 	double sum = 0;
 	for (int i=0; i<nsample; ++i)
 	{
