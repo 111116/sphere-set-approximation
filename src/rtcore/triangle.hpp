@@ -9,11 +9,11 @@ namespace RTcore
 
 class Triangle
 {
-	vec3f v1,v2,v3;
 	mat3f tMatrix;
 	double one_by_2S;
 
 public:
+	vec3f v1,v2,v3;
 	vec3f planeNormal;
 
 	Triangle(vec3f v1, vec3f v2, vec3f v3, vec3f frontvec = 0): v1(v1), v2(v2), v3(v3)

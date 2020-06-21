@@ -21,9 +21,9 @@ class Mesh
 			return primitive!=NULL;
 		}
 	};
-protected:
-	std::vector<Triangle*> list;
 public:
+	std::vector<Triangle*> list;
+	
 	Mesh(const std::vector<Triangle*>& list): list(list)
 	{
 		console.log("building SAH BVH of", list.size(), "primitives");
@@ -155,7 +155,7 @@ private:
 			return t? std::vector<Triangle*>{node->shape}: std::vector<Triangle*>{};
 		}
 		auto resl = treehit_all(ray, node->lc);
-		auto resr = treehit_all(ray, node->lc);
+		auto resr = treehit_all(ray, node->rc);
 		resl.insert(resl.end(), resr.begin(), resr.end());
 		return resl;
 	}
