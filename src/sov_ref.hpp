@@ -13,7 +13,7 @@
 // parameters: mesh, sphere center & radius
 double sov_sampled(const RTcore::Mesh& mesh, vec3f o, double r)
 {
-	const int nsample = 10000000;
+	const int nsample = 1000000;
 	RTcore::MT19937Sampler sampler(rand());
 	double sum = 0;
 	for (int i=0; i<nsample; ++i)
@@ -26,6 +26,6 @@ double sov_sampled(const RTcore::Mesh& mesh, vec3f o, double r)
 		// integral
 		sum += !point_in_mesh(p, mesh);
 	}
-	return sum / nsample;
+	return sum / nsample * 4.0/3*PI*r*r*r;
 }
 
