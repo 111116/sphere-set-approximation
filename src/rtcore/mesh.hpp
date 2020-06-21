@@ -34,12 +34,18 @@ public:
 		}
 	}
 
-	bool intersect(const Ray& ray, double& result) const
+	bool intersect(const Ray& ray, double& result, vec3f& normal) const
 	{
 		HitTmp tmp = treehit(ray, root);
 		if (!tmp) return false;
 		result = tmp.t;
+		normal = tmp.primitive->planeNormal;
 		return true;
+	}
+
+	std::vector<Triangle*> intersect_all(const Ray& ray) const
+	{
+		return treehit_all(ray, root);
 	}
 	 
 	AABox boundingVolume() const
@@ -138,6 +144,20 @@ private:
 		if (!resl) return treehit(ray, node->rc);
 		HitTmp resr = treehit(ray, node->rc);
 		return (!resr || resl.t < resr.t)? resl: resr;
+	}
+
+	std::vector<Triangle*> treehit_all(const Ray& ray, treenode* node) const {
+		if (node == NULL) return {};
+		if (!node->bound.intersect(ray)) return {};
+		if (node->shape != NULL) {
+			double p;
+			bool t = node->shape->intersect(ray, p);
+			return t? std::vector<Triangle*>{node->shape}: std::vector<Triangle*>{};
+		}
+		auto resl = treehit_all(ray, node->lc);
+		auto resr = treehit_all(ray, node->lc);
+		resl.insert(resl.end(), resr.begin(), resr.end());
+		return resl;
 	}
 };
 

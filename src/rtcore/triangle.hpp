@@ -10,13 +10,13 @@ namespace RTcore
 class Triangle
 {
 	vec3f v1,v2,v3;
-
 	mat3f tMatrix;
 	double one_by_2S;
 
 public:
+	vec3f planeNormal;
 
-	Triangle(vec3f v1, vec3f v2, vec3f v3): v1(v1), v2(v2), v3(v3)
+	Triangle(vec3f v1, vec3f v2, vec3f v3, vec3f frontvec = 0): v1(v1), v2(v2), v3(v3)
 	// pre-calculation to accelerate intersection / interpolation computation
 	{
 		// NOTE: be careful when dealing with tiny triangles!
@@ -25,6 +25,9 @@ public:
 		assert(norm(v2-v3)>0);
 		assert(norm(cross(normalized(v2-v1), normalized(v3-v1))) > 1e-9);
 
+		planeNormal = normalized(cross(v2-v1, v3-v1));
+		if (dot(planeNormal, frontvec) < 0)
+			planeNormal = -planeNormal;
 		// make sure plane normal points outward
 		one_by_2S = 1 / norm(cross(v3-v1, v2-v1));
 		tMatrix = inverse(mat3f(v2-v1, v3-v1, cross(v2-v1, normalized(v3-v1))));

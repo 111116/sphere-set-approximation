@@ -5,11 +5,13 @@
 #pragma once
 
 #include "math/vecmath.hpp"
+#include "rtcore/mesh.hpp"
 #include "rtcore/mt19937sampler.hpp"
 #include "rtcore/triangle.hpp"
+#include "point_in_mesh.hpp"
 
 // parameters: mesh, sphere center & radius
-double sotv_sampled(const RTcore::Mesh mesh&, vec3f o, double r)
+double sov_sampled(const RTcore::Mesh& mesh, vec3f o, double r)
 {
 	const int nsample = 10000000;
 	RTcore::MT19937Sampler sampler(rand());
