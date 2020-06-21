@@ -1,12 +1,12 @@
 
 #define VOXELIZER_IMPLEMENTATION
 #include "lib/voxelizer.h"
-#include "sotv.hpp"
-#include "sov_test.hpp"
+#include "sov.hpp"
 
 #include "rtcore/objmesh.hpp"
 #include "rtcore/mesh.hpp"
 #include "visualize.hpp"
+#include "normal_outward_test.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -17,5 +17,5 @@ int main(int argc, char* argv[])
 	}
 	visualizer_mesh_filename = argv[1];
 	RTcore::Mesh m = RTcore::objmesh(argv[1]);
-	testsov(m);
+	test_all_normal_outward(m);
 }

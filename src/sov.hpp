@@ -6,6 +6,7 @@
 #include "rtcore/mesh.hpp"
 #include "rtcore/triangle.hpp"
 #include "point_in_mesh.hpp"
+#include "sotv.hpp"
 
 // parameters: mesh, sphere center & radius
 double sov(const RTcore::Mesh& mesh, vec3f o, double r)
