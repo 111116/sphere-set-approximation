@@ -90,16 +90,7 @@ Mesh objmesh(const char* filename)
 							faces.push_back(new Triangle(vv[0], vv[l-1], vv[l]));
 						}
 						else {
-							// console.info("building triangle");
-							// console.log("v",vv[0]);
-							// console.log("v",vv[l-1]);
-							// console.log("v",vv[l]);
-							// console.log("N:",vvn[0]);
-							// console.log("N:",vvn[l-1]);
-							// console.log("N:",vvn[l]);
-							// console.log("frontHint:",vvn[0]+vvn[l-1]+vvn[l]);
 							faces.push_back(new Triangle(vv[0], vv[l-1], vv[l], vvn[0]+vvn[l-1]+vvn[l]));
-							// console.log("planeN:",faces.back()->planeNormal);
 						}
 					}
 				}

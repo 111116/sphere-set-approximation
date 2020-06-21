@@ -1,6 +1,6 @@
 CXXFLAGS = -std=c++11 -I. -O3
 
-main: main.cpp *.hpp
+main: main.cpp *.hpp */*.hpp
 	$(CXX) $(CXXFLAGS) $< rtcore/aabox.cpp math/vecmath.cpp -o $@
 
 #sotv_test: sotv_test.cpp math/vecmath.cpp sotv.hpp sotv_ref.hpp
