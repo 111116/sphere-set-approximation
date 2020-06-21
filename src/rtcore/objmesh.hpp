@@ -16,11 +16,15 @@ namespace RTcore
 Mesh objmesh(const char* filename)
 {
 	console.log("Loading mesh:", filename);
-	if (strcmp(filename+strlen(filename)-4, ".obj") != 0)
+	if (strcmp(filename+strlen(filename)-4, ".obj") != 0) {
+		console.error("format must be obj");
 		throw "format must be obj";
+	}
 	std::ifstream fin(filename);
-	if (!fin)
+	if (!fin) {
+		console.error("Can't open file");
 		throw "Can't open file";
+	}
 	std::vector<Triangle*> faces;
 	std::vector<vec3f> v,vn;
 	std::vector<vec2f> vt;
@@ -81,10 +85,22 @@ Mesh objmesh(const char* filename)
 				for (int l=2; l<vv.size(); ++l) {
 					// ignore triangles of zero surface area
 					if (cross(vv[l-1]-vv[0],vv[l]-vv[0]) != vec3f(0)) {
-						if (recompute_normal)
+						if (recompute_normal) {
+							console.warn("Vertex normal isn't given");
 							faces.push_back(new Triangle(vv[0], vv[l-1], vv[l]));
-						else
-							faces.push_back(new Triangle(vv[0], vv[l-1], vv[l], vn[0]+vn[l-1]+vn[l]));
+						}
+						else {
+							// console.info("building triangle");
+							// console.log("v",vv[0]);
+							// console.log("v",vv[l-1]);
+							// console.log("v",vv[l]);
+							// console.log("N:",vvn[0]);
+							// console.log("N:",vvn[l-1]);
+							// console.log("N:",vvn[l]);
+							// console.log("frontHint:",vvn[0]+vvn[l-1]+vvn[l]);
+							faces.push_back(new Triangle(vv[0], vv[l-1], vv[l], vvn[0]+vvn[l-1]+vvn[l]));
+							// console.log("planeN:",faces.back()->planeNormal);
+						}
 					}
 				}
 			} // end reading face
