@@ -20,7 +20,7 @@ void printscene(std::vector<std::pair<vec3f,double>> spheres, std::string outfil
 	for (auto sph : spheres)
 	{
 		fout << "{\"type\": \"sphere\",\"transform\":{\"position\":["
-		<< sph.first.x << "," << sph.first.y << "," << sph.first.z << "],\"scale\":" << sph.second << "},\"bsdf\":{\"type\":\"lambert\",\"ior\":1.3,\"albedo\":[1,0.6,0.6]}},";
+		<< sph.first.x << "," << sph.first.y << "," << sph.first.z << "],\"scale\":" << sph.second << "},\"bsdf\":{\"type\":\"lambert\",\"ior\":1.3,\"albedo\":[1,0.6,0.6]}},\n";
 	}
     fout << "{\"type\": \"skydome\",\"temperature\": 4777.0,\"gamma_scale\": 1.0,\"turbidity\": 3.0,\"intensity\": 6.0,\"sample\": true},";
 	fout << "],\n";

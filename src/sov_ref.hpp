@@ -1,5 +1,5 @@
 // calculate Sphere Outside Volume (SOV)
-// using sampling 
+// using sampling (volume method)
 // It's inefficient and approximated, only used for validation purposes
 
 #pragma once
