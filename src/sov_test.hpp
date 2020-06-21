@@ -43,35 +43,40 @@ void testsov(const RTcore::Mesh& mesh)
 	test_all_normal_outward(mesh);
 	for (int i=0; i<1000; ++i)
 	{
-		console.log("testcase",i);
+		console.info("testcase",i);
 		vec3f o(rnd(),rnd(),rnd());
 		double r = std::abs(rnd());
 		// override testcase
-		o = vec3f(-0.26742,-0.521586,-0.294583);
-		r = 0.939748;
 
 		double res = sov(mesh,o,r);
-		console.log("result:",res);
-		// angle-based monte-carlo method
-		for (int i=0; i<5; ++i) {
-			console.log("raysampled:",sov_ray_sampled(mesh,o,r));
+		console.log("analytic result:", res);
+		// probably skip trivial test
+		if (std::abs(res - r*r*r*4/3*PI)<1e-6 && rand()%10!=0)
+		{
+			console.log("Skipping trivial case...");
+			continue;
 		}
+		// angle-based monte-carlo method
+		std::vector<double> ans_a;
+		for (int i=0; i<5; ++i) {
+			ans_a.push_back(sov_ray_sampled(mesh,o,r));
+		}
+		console.log("cone-numeric:   ", average(ans_a), "+-", stdev(ans_a));
 		// volume-based monte-carlo method (as reference)
 		std::vector<double> ans;
-		for (int i=0; i<5; ++i) {
+		for (int i=0; i<8; ++i) {
 			ans.push_back(sov_sampled(mesh,o,r));
-			console.log("sampled",ans.back());
 		}
 		double avg = average(ans);
 		double s = stdev(ans);
-		console.log("out:", res, "  ans:", avg,"+-",s);
-		printscene({{o,r}});
+		console.log("vol-numeric:    ", avg,"+-",s);
 		// probable error
 		if (std::abs(res-avg) > 2*s)
 		{
 			console.error("error");
 			console.warn('o',o);
 			console.warn('r',r);
+			printscene({{o,r}});
 		}
 	}
 	
