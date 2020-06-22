@@ -100,24 +100,6 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 			sumloss += loss(sphere[i]);
 		}
 		console.log("total loss:", sumloss);
-		if (not (sumloss < 100)) {
-			for (auto s: sphere) {
-				double l = loss(s);
-				if (not (l < 100)) {
-					console.log("wtf sphere:", s.center, s.radius);
-					for (auto t : mesh.list) {
-						double v = sotv(t->v1, t->v2, t->v3, s.center, s.radius);
-						if (not(std::abs(v)<100)) {
-							console.log("sotv",v);
-							console.log("  trig",t->v1);
-							console.log("  trig",t->v2);
-							console.log("  trig",t->v3);
-							SOTV::debug(t->v1, t->v2, t->v3, s.center, s.radius);
-						}
-					}
-				}
-			}
-		}
 		// save best result so far
 		if (sumloss < bestsumloss) {
 			bestsumloss = sumloss;
