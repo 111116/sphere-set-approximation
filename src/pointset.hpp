@@ -5,50 +5,12 @@
 #include "rtcore/mesh.hpp"
 #include "rtcore/mt19937sampler.hpp"
 #include "math/vecmath.hpp"
-#define VOXELIZER_IMPLEMENTATION
-#include "lib/voxelizer.h"
 #include "visualize.hpp"
 #include "util.hpp"
 
 
 typedef std::vector<vec3f> PointSet;
 
-
-vx_vertex_t vxvec(const vec3f& a)
-{
-	vx_vertex_t b;
-	b.x = a.x;
-	b.y = a.y;
-	b.z = a.z;
-	return b;
-}
-
-vec3f vecvx(const vx_vertex_t& a)
-{
-	vec3f b;
-	b.x = a.x;
-	b.y = a.y;
-	b.z = a.z;
-	return b;
-}
-
-vx_mesh_t* meshconvert(const RTcore::Mesh& mesh)
-{
-	auto trigs = mesh.list;
-	vx_mesh_t* m = vx_mesh_alloc(trigs.size()*3, trigs.size()*3);
-	int id = 0;
-	for (auto t: trigs) {
-		for (int i=0; i<3; ++i) {
-			m->indices[id] = id;
-			m->normalindices[id] = id;
-			m->vertices[id] = vxvec((i==0)?t->v1: (i==1)?t->v2: t->v3);
-			m->normals[id] = vxvec(t->planeNormal);
-			m->colors[id] = vxvec(0);
-			id++;
-		}
-	}
-	return m;
-}
 
 std::tuple<vec3f, vec3f> farthest_points_apart(const PointSet& p)
 {
@@ -118,25 +80,17 @@ double diameter(const RTcore::Mesh& mesh)
 
 PointSet get_inner_points(const RTcore::Mesh& mesh)
 {
-	// convert mesh to vxmesh
-	vx_mesh_t* vxmesh = meshconvert(mesh);
-	// voxelize
 	double vxsize = 0.02;
-	vx_point_cloud_t* pointcloud = vx_voxelize_pc(vxmesh, vxsize, vxsize, vxsize, vxsize);
 	PointSet points;
-	for (int i=0; i<pointcloud->nvertices; ++i)
-		points.push_back(vecvx(pointcloud->vertices[i]));
-	// free memory
-	vx_mesh_free(vxmesh);
-	vx_point_cloud_free(pointcloud);
-	// filter points
-	PointSet filtered;
-	for (auto p: points)
-		if (point_in_mesh(p,mesh))
-			filtered.push_back(p);
-	visualize(filtered);
-	console.info(filtered.size(), "inner points");
-	return filtered;
+	auto aabb = mesh.boundingVolume();
+	for (double x = aabb.x1 - vxsize; x < aabb.x2 + vxsize; x += vxsize)
+	for (double y = aabb.y1 - vxsize; y < aabb.y2 + vxsize; y += vxsize)
+	for (double z = aabb.z1 - vxsize; z < aabb.z2 + vxsize; z += vxsize)
+		if (point_in_mesh(vec3f(x,y,z), mesh))
+			points.push_back(vec3f(x,y,z));
+	visualize(points);
+	console.info(points.size(), "inner points");
+	return points;
 }
 
 
