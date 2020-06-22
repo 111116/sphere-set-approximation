@@ -7,9 +7,11 @@
 #include "math/vecmath.hpp"
 #include "rtcore/mesh.hpp"
 
+typedef std::vector<vec3f> PointSet;
+
 std::string visualizer_mesh_filename = "";
 
-void printscene(std::vector<std::pair<vec3f,double>> spheres, std::string outfile = "scene.json", vec3f camerapos = vec3f(5,2,5))
+void visualize(std::vector<Sphere> spheres, std::string outfile = "scene.json", vec3f camerapos = vec3f(-5,2,-4.76543))
 {
 	std::ofstream fout(outfile);
 	fout << "{\"primitives\":[\n";
@@ -20,11 +22,11 @@ void printscene(std::vector<std::pair<vec3f,double>> spheres, std::string outfil
 	for (auto sph : spheres)
 	{
 		fout << "{\"type\": \"sphere\",\"transform\":{\"position\":["
-		<< sph.first.x << "," << sph.first.y << "," << sph.first.z << "],\"scale\":" << sph.second << "},\"bsdf\":{\"type\":\"lambert\",\"ior\":1.3,\"albedo\":[1,0.6,0.6]}},\n";
+		<< sph.center.x << "," << sph.center.y << "," << sph.center.z << "],\"scale\":" << sph.radius << "},\"bsdf\":{\"type\":\"lambert\",\"ior\":1.3,\"albedo\":[1,0.6,0.6]}},\n";
 	}
     fout << "{\"type\": \"skydome\",\"temperature\": 4777.0,\"gamma_scale\": 1.0,\"turbidity\": 3.0,\"intensity\": 6.0,\"sample\": true},";
 	fout << "],\n";
-	fout << "\"camera\":{\"resolution\":[512,512],\"transform\":{";
+	fout << "\"camera\":{\"resolution\":[1024,1024],\"transform\":{";
 	// print camera pos
 	fout << "\"position\": [" << camerapos.x << "," << camerapos.y << "," << camerapos.z << "], \"look_at\": [0,0,0], \"up\": [0,1,0]";
 
@@ -35,3 +37,13 @@ void printscene(std::vector<std::pair<vec3f,double>> spheres, std::string outfil
     fout << "}\n";
 }
 
+void visualize(const PointSet& set, double visualradius = 0.01)
+{
+	std::string tmp = visualizer_mesh_filename;
+	visualizer_mesh_filename = "";
+	std::vector<Sphere> s;
+	for (auto p: set)
+		s.push_back(Sphere(p, visualradius));
+	visualize(s);
+	visualizer_mesh_filename = tmp;
+}
