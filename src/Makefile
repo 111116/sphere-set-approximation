@@ -1,4 +1,4 @@
-CXXFLAGS = -std=c++11 -I. -O3
+CXXFLAGS = -std=c++17 -I. -O3
 
 main: main.cpp *.hpp */*.hpp
 	$(CXX) $(CXXFLAGS) $< rtcore/aabox.cpp math/vecmath.cpp -o $@

@@ -6,7 +6,7 @@ Approximate a mesh by bounding it with a set of spheres, using method described 
 
 [*Variational Sphere set Approximation for Solid Objects*](http://dx.doi.org/10.1007/s00371-006-0052-0)
 
-The SOTV defined in this paper is bugfixed (therefore results might not be identical).
+The SOTV defined in this paper is bugfixed.
 
 ### 预处理
 
@@ -16,7 +16,7 @@ The SOTV defined in this paper is bugfixed (therefore results might not be ident
 
 随机选取内部点作为球心
 
-1.
+1. 
 
 将点归给SOV增量最小的球（相同时选取距离最小）
 

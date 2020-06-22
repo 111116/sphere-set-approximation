@@ -7,6 +7,7 @@
 #include "rtcore/triangle.hpp"
 #include "point_in_mesh.hpp"
 #include "sotv.hpp"
+#include "sphere.hpp"
 
 // parameters: mesh, sphere center & radius
 double sov(const RTcore::Mesh& mesh, vec3f o, double r)
@@ -18,4 +19,9 @@ double sov(const RTcore::Mesh& mesh, vec3f o, double r)
 	if (!point_in_mesh(o, mesh))
 		s += 4.0/3*PI * r*r*r;
 	return s;
+}
+
+double sov(const RTcore::Mesh& mesh, const Sphere& sphere)
+{
+	return sov(mesh, sphere.center, sphere.radius);
 }

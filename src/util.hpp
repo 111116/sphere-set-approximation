@@ -1,11 +1,13 @@
 #pragma once
 
 #include <algorithm>
+#include <vector>
 #include <utility>
 
+// returns iterator of the max element according to key
 // https://stackoverflow.com/a/14200316/7884249
 template<typename Container, typename Fn>
-auto argmax(const Container& c, Fn&& key) -> decltype(std::begin(c))
+auto argmax(Container& c, Fn&& key) -> decltype(std::begin(c))
 {  
     if ( std::begin(c) == std::end(c) ) 
        throw std::invalid_argument("empty container is not allowed.");
@@ -15,23 +17,16 @@ auto argmax(const Container& c, Fn&& key) -> decltype(std::begin(c))
     return std::max_element(std::begin(c), std::end(c), cmp);
 }
 
-// template<typename Container, typename Fn>
-// auto valmax(const Container& c, Fn&& f) -> decltype(f(*std::begin(c)))
-// {  
-//     if ( std::begin(c) == std::end(c) ) 
-//        throw std::invalid_argument("empty container is not allowed.");
-
-//     decltype(f(*std::begin(c))) m = f(*std::begin(c));
-//     for (auto e: c)
-//         m = std::max(m, f(e));
-//     return m;
-// }
-
-template<typename Container, typename Fn>
-auto map(const Container& c, Fn&& f) -> std::vector<decltype(Fn(*std::begin(c)))> 
+template<typename T>
+std::vector<T> random_subset(const std::vector<T>& v, unsigned ns)
 {
-    std::vector<decltype(Fn(*std::begin(c)))> a;
-    for (auto e: c)
-        a.push_back(f(e));
-    return a;
+
+}
+
+template<typename T>
+std::vector<T> concat(const std::vector<T>& a, const std::vector<T>& b)
+{
+    std::vector<T> ab = a;
+    ab.insert(ab.end(), b.begin(), b.end());
+    return ab;
 }
