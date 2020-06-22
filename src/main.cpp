@@ -112,6 +112,7 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 							console.log("  trig",t->v1);
 							console.log("  trig",t->v2);
 							console.log("  trig",t->v3);
+							SOTV::debug(t->v1, t->v2, t->v3, s.center, s.radius);
 						}
 					}
 				}

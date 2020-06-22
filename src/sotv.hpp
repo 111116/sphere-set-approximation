@@ -16,6 +16,28 @@ public:
 		return sotv(v1,v2,v3,o,r);
 	}
 
+	static double debug(vec3f v1, vec3f v2, vec3f v3, vec3f o, double r)
+	{
+		bool out1 = (sqrlen(v1-o) > r*r);
+		bool out2 = (sqrlen(v2-o) > r*r);
+		bool out3 = (sqrlen(v3-o) > r*r);
+		int n_out = out1 + out2 + out3;
+		console.log("n_vert_out:", n_out);
+		if (n_out == 0) return sotv_case_a(v1, v2, v3, o,r);
+		if (n_out == 3) return sotv_case_b(v1, v2, v3, o,r);
+		if (n_out == 2) {
+			if (!out1) return sotv_case_c(v1, v2,v3, o,r);
+			if (!out2) return sotv_case_c(v2, v1,v3, o,r);
+			if (!out3) return sotv_case_c(v3, v1,v2, o,r);
+		}
+		if (n_out == 1) {
+			if (out1) return sotv_case_d_debug(v1, v2,v3, o,r);
+			if (out2) return sotv_case_d_debug(v2, v1,v3, o,r);
+			if (out3) return sotv_case_d_debug(v3, v1,v2, o,r);
+		}
+		assert(false);
+	}
+
 private:
 
 	// parameters: triangle vertices, sphere center & radius
@@ -59,6 +81,8 @@ private:
 		double sina = std::sqrt(std::max(0.0, 1.0 - cosa * cosa));
 		double sinb = std::sqrt(std::max(0.0, 1.0 - cosb * cosb));
 		double sinc = std::sqrt(std::max(0.0, 1.0 - cosc * cosc));
+		if (sina < 1e-7 or sinb < 1e-7 or sinc < 1e-7)
+			return 0;
 		double phi_a = acos((cosa - cosb * cosc) / (sinb * sinc));
 		double phi_b = acos((cosb - cosa * cosc) / (sina * sinc));
 		double phi_c = acos((cosc - cosa * cosb) / (sina * sinb));
@@ -66,6 +90,33 @@ private:
 		return omega;
 	}
 
+	static double solid_angle_tetrahedron_debug(vec3f oa, vec3f ob, vec3f oc)
+	{
+		// https://math.stackexchange.com/a/3305625
+		double cosa = dot(ob,oc) / (norm(ob)*norm(oc));
+		double cosb = dot(oa,oc) / (norm(oa)*norm(oc));
+		double cosc = dot(oa,ob) / (norm(oa)*norm(ob));
+		console.log("solid_angle_tetrahedron_debug");
+		console.log("c",cosa);
+		console.log("c",cosb);
+		console.log("c",cosc);
+		double sina = std::sqrt(std::max(0.0, 1.0 - cosa * cosa));
+		double sinb = std::sqrt(std::max(0.0, 1.0 - cosb * cosb));
+		double sinc = std::sqrt(std::max(0.0, 1.0 - cosc * cosc));
+		if (sina < 1e-7 or sinb < 1e-7 or sinc < 1e-7)
+			return 0;
+		console.log("s",sina);
+		console.log("s",sinb);
+		console.log("s",sinc);
+		double phi_a = acos((cosa - cosb * cosc) / (sinb * sinc));
+		double phi_b = acos((cosb - cosa * cosc) / (sina * sinc));
+		double phi_c = acos((cosc - cosa * cosb) / (sina * sinb));
+		console.log("ph",phi_a);
+		console.log("ph",phi_b);
+		console.log("ph",phi_c);
+		double omega = phi_a + phi_b + phi_c - PI;
+		return omega;
+	}
 	static double volume_tetrahedron(vec3f oa, vec3f ob, vec3f oc)
 	{
 		return std::abs(dot(oa, cross(ob, oc))) / 6;
@@ -144,6 +195,19 @@ private:
 		double V = volume_tetrahedron(v1-o, v2-o, v3-o);
 		return r*r*r*omega/3 - V;
 	}
+	// (a) 3 vert. in
+	static double sotv_case_a_debug(vec3f v1, vec3f v2, vec3f v3, vec3f o, double r)
+	{
+		console.log("case A debug",v1,v2,v3,o,r);
+		console.log("tt",v1-o);
+		console.log("tt",v2-o);
+		console.log("tt",v3-o);
+		double omega = solid_angle_tetrahedron_debug(v1-o, v2-o, v3-o);
+		console.log("omega",omega);
+		double V = volume_tetrahedron(v1-o, v2-o, v3-o);
+		console.log("V",V);
+		return r*r*r*omega/3 - V;
+	}
 
 	// swing volume needed to subtract at an edge of triangle
 	static double slice_remaining(vec3f a, vec3f b, vec3f c, vec3f o, double r)
@@ -190,6 +254,16 @@ private:
 		vol -= slice_remaining(v2,v3, vin, o,r);
 		return vol;
 	}
+	// (c) 2 vert. out
+	static double sotv_case_c_debug(vec3f vin, vec3f v2, vec3f v3, vec3f o, double r)
+	{
+		// first solve for infinite triangle
+		double vol = sotv_case_c_original_debug(vin, v2, v3, o,r);
+		console.log("c original",vol);
+		// then subtract swing volumes
+		vol -= slice_remaining(v2,v3, vin, o,r);
+		return vol;
+	}
 
 	// (c) 2 vert. out  (formula in original paper, which seems to assume infinite triangle)
 	static double sotv_case_c_original(vec3f vin, vec3f v2, vec3f v3, vec3f o, double r)
@@ -198,12 +272,29 @@ private:
 		vec3f p1 = line_sphere_intersection_1o(vin, v3, o,r);
 		return sotv_case_a(p0,p1,vin,o,r) + swing_volume(p0,p1,vin,o,r);
 	}
+	// (c) 2 vert. out  (formula in original paper, which seems to assume infinite triangle)
+	static double sotv_case_c_original_debug(vec3f vin, vec3f v2, vec3f v3, vec3f o, double r)
+	{
+		vec3f p0 = line_sphere_intersection_1o(vin, v2, o,r);
+		vec3f p1 = line_sphere_intersection_1o(vin, v3, o,r);
+		return sotv_case_a_debug(p0,p1,vin,o,r) + swing_volume(p0,p1,vin,o,r);
+	}
 
 	// (d) 1 vert. out
 	static double sotv_case_d(vec3f vout, vec3f v2, vec3f v3, vec3f o, double r)
 	{
 		vec3f p0 = line_sphere_intersection_1o(vout, v2, o,r);
 		return sotv_case_c(v3, vout,p0, o,r) + sotv_case_a(v3,v2,p0, o,r);
+	}
+
+	// (d) 1 vert. out
+	static double sotv_case_d_debug(vec3f vout, vec3f v2, vec3f v3, vec3f o, double r)
+	{
+		vec3f p0 = line_sphere_intersection_1o(vout, v2, o,r);
+		console.log("p0",p0);
+		console.log("part c",sotv_case_c(v3, vout,p0, o,r));
+		console.log("part a",sotv_case_a(v3,v2,p0, o,r));
+		return sotv_case_c_debug(v3, vout,p0, o,r) + sotv_case_a(v3,v2,p0, o,r);
 	}
 
 	static bool triangle_outside_sphere(vec3f a, vec3f b, vec3f c, vec3f o, double r)
