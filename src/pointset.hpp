@@ -78,17 +78,27 @@ double diameter(const RTcore::Mesh& mesh)
 }
 
 
-PointSet get_inner_points(const RTcore::Mesh& mesh)
+PointSet voxelized(const RTcore::Mesh& mesh, double vxsize)
 {
-	double vxsize = 0.02;
-	PointSet points;
 	auto aabb = mesh.boundingVolume();
+	PointSet points;
 	for (double x = aabb.x1 - vxsize; x < aabb.x2 + vxsize; x += vxsize)
 	for (double y = aabb.y1 - vxsize; y < aabb.y2 + vxsize; y += vxsize)
 	for (double z = aabb.z1 - vxsize; z < aabb.z2 + vxsize; z += vxsize)
 		if (point_in_mesh(vec3f(x,y,z), mesh))
 			points.push_back(vec3f(x,y,z));
-	visualize(points);
+	return points;
+}
+
+PointSet get_inner_points(const RTcore::Mesh& mesh, int n_approx = 10000)
+{
+	// voxel number estimate
+	auto aabb = mesh.boundingVolume();
+	double vxsize = std::cbrt((aabb.x2-aabb.x1)*(aabb.y2-aabb.y1)*(aabb.z2-aabb.z1))/100;
+	PointSet points = voxelized(mesh, vxsize);
+	// resample with estimated density
+	vxsize *= std::cbrt(points.size() / n_approx);
+	points = voxelized(mesh, vxsize);
 	console.info(points.size(), "inner points");
 	return points;
 }
@@ -111,9 +121,12 @@ PointSet sample_surface(const RTcore::Mesh& mesh, int n_approx)
 	return result;
 }
 
-PointSet get_surface_points(const RTcore::Mesh& mesh)
+PointSet get_surface_points(const RTcore::Mesh& mesh, int n_approx = 10000)
 {
-	PointSet points = allvertices(mesh);
+	PointSet points = sample_surface(mesh, n_approx);
+	// don't need all vertices if we don't want to be strict
+	// PointSet points = allvertices(mesh);
+	visualize(points);
 	console.info(points.size(), "surface points");
 	return points;
 }
