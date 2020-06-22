@@ -99,7 +99,7 @@ PointSet get_inner_points(const RTcore::Mesh& mesh, int n_approx = 10000)
 	// resample with estimated density
 	vxsize *= std::cbrt(points.size() / n_approx);
 	points = voxelized(mesh, vxsize);
-	console.info(points.size(), "inner points");
+	console.log(points.size(), "inner points");
 	return points;
 }
 
@@ -126,7 +126,6 @@ PointSet get_surface_points(const RTcore::Mesh& mesh, int n_approx = 10000)
 	PointSet points = sample_surface(mesh, n_approx);
 	// don't need all vertices if we don't want to be strict
 	// PointSet points = allvertices(mesh);
-	visualize(points);
-	console.info(points.size(), "surface points");
+	console.log(points.size(), "surface points");
 	return points;
 }

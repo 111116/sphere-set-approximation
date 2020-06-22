@@ -13,13 +13,29 @@
 std::tuple<std::vector<Sphere>, std::vector<PointSet>>
 	points_assign(const std::vector<vec3f>& center, const PointSet& points, std::function<double(Sphere)> loss)
 {
+	const int n = center.size();
 	std::vector<Sphere> sphere;
-	std::vector<PointSet> cluster;
+	std::vector<PointSet> cluster(n);
+	// naive method: assign each point to nearest sphere
+	for (auto p: points) {
+		auto iter = argmax(center, [p](vec3f c){return -sqrlen(c-p);});
+		cluster[iter - center.begin()].push_back(p);
+	}
+	for (int i=0; i<n; ++i) {
+		sphere.push_back(Sphere(center[i], 0));
+		for (auto p: cluster[i])
+			sphere[i].radius = std::max(sphere[i].radius, norm(p-center[i]));
+	}
+	return {sphere, cluster};
 }
 
 Sphere sphere_fit(const Sphere& initial, const PointSet& points)
 {
-	return initial;
+	// naive method: take average as center
+	Sphere sphere(average(points), 0);
+	for (auto p: points)
+		sphere.radius = std::max(sphere.radius, norm(p-sphere.center));
+	return sphere;
 }
 
 void checkContain(const Sphere& s, const PointSet& points)
@@ -60,17 +76,18 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 {
 	double bestsumloss = std::numeric_limits<double>::infinity();
 	std::vector<Sphere> bestresult;
+	auto loss = [&](Sphere s){return sov(mesh,s);};
 	// initialize
 	console.log("initializing...");
-	auto loss = [&](Sphere s){return sov(mesh,s);};
 	PointSet innerpoints = get_inner_points(mesh);
 	PointSet surfacepoints = get_surface_points(mesh);
 	std::vector<vec3f> center;
-	std::sample(center.end(), innerpoints.begin(), innerpoints.end(), ns, std::mt19937(0));
+	std::sample(innerpoints.begin(), innerpoints.end(), std::back_inserter(center), ns, std::mt19937(0));
 	console.log("optimizing...");
 	// iterate over 3 steps
 	std::vector<Sphere> sphere;
 	std::vector<PointSet> points;
+	for (int i=0; i<50; ++i) {
 	// step 1: point assignment
 	std::tie(sphere, points) = points_assign(center, concat(innerpoints, surfacepoints), loss);
 	// step 2: fitting & save results
@@ -82,6 +99,24 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 			checkContain(sphere[i], points[i]); // debug
 			sumloss += loss(sphere[i]);
 		}
+		console.log("total loss:", sumloss);
+		if (not (sumloss < 100)) {
+			for (auto s: sphere) {
+				double l = loss(s);
+				if (not (l < 100)) {
+					console.log("wtf sphere:", s.center, s.radius);
+					for (auto t : mesh.list) {
+						double v = sotv(t->v1, t->v2, t->v3, s.center, s.radius);
+						if (not(std::abs(v)<100)) {
+							console.log("sotv",v);
+							console.log("  trig",t->v1);
+							console.log("  trig",t->v2);
+							console.log("  trig",t->v3);
+						}
+					}
+				}
+			}
+		}
 		// save best result so far
 		if (sumloss < bestsumloss) {
 			bestsumloss = sumloss;
@@ -89,10 +124,11 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 		}
 	}
 	// step 3: teleportation
-	teleport(sphere, points, loss);
+	// teleport(sphere, points, loss);
 	for (int i=0; i<ns; ++i)
 		center[i] = sphere[i].center;
-
+	}
+	visualize(bestresult);
 	return bestresult;
 }
 

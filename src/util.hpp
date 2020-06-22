@@ -17,11 +17,6 @@ auto argmax(Container& c, Fn&& key) -> decltype(std::begin(c))
     return std::max_element(std::begin(c), std::end(c), cmp);
 }
 
-template<typename T>
-std::vector<T> random_subset(const std::vector<T>& v, unsigned ns)
-{
-
-}
 
 template<typename T>
 std::vector<T> concat(const std::vector<T>& a, const std::vector<T>& b)
@@ -29,4 +24,14 @@ std::vector<T> concat(const std::vector<T>& a, const std::vector<T>& b)
     std::vector<T> ab = a;
     ab.insert(ab.end(), b.begin(), b.end());
     return ab;
+}
+
+template<typename T>
+T average(const std::vector<T>& a)
+{
+	if (a.empty()) throw "cannot average empty container";
+	T sum = 0;
+	for (T x: a)
+		sum += x;
+	return sum / a.size();
 }

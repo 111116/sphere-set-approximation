@@ -13,6 +13,7 @@ std::string visualizer_mesh_filename = "";
 
 void visualize(std::vector<Sphere> spheres, std::string outfile = "scene.json", vec3f camerapos = vec3f(3,2,-5.76543))
 {
+	console.info("For visualization, run: tungsten", outfile);
 	std::ofstream fout(outfile);
 	fout << "{\"primitives\":[\n";
 	if (visualizer_mesh_filename != "")
