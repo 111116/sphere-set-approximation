@@ -3,11 +3,12 @@
 #include <unordered_set>
 #include <tuple>
 #include "rtcore/mesh.hpp"
-#include "rtcore/sharedsampler.hpp"
+#include "rtcore/mt19937sampler.hpp"
 #include "math/vecmath.hpp"
 #define VOXELIZER_IMPLEMENTATION
 #include "lib/voxelizer.h"
 #include "visualize.hpp"
+#include "util.hpp"
 
 
 typedef std::vector<vec3f> PointSet;
@@ -120,20 +121,45 @@ PointSet get_inner_points(const RTcore::Mesh& mesh)
 	// convert mesh to vxmesh
 	vx_mesh_t* vxmesh = meshconvert(mesh);
 	// voxelize
-	double vxsize = 0.1;
-	vx_point_cloud_t* pointcloud = vx_voxelize_pc(vxmesh, vxsize, vxsize, vxsize, vxsize/10);
+	double vxsize = 0.02;
+	vx_point_cloud_t* pointcloud = vx_voxelize_pc(vxmesh, vxsize, vxsize, vxsize, vxsize);
 	PointSet points;
 	for (int i=0; i<pointcloud->nvertices; ++i)
 		points.push_back(vecvx(pointcloud->vertices[i]));
 	// free memory
 	vx_mesh_free(vxmesh);
 	vx_point_cloud_free(pointcloud);
-	return points;
+	// filter points
+	PointSet filtered;
+	for (auto p: points)
+		if (point_in_mesh(p,mesh))
+			filtered.push_back(p);
+	visualize(filtered);
+	console.info(filtered.size(), "inner points");
+	return filtered;
+}
+
+
+PointSet sample_surface(const RTcore::Mesh& mesh, int n_approx)
+{
+	RTcore::MT19937Sampler sampler(rand());
+	double area = 0;
+	auto trigs = mesh.list;
+	for (auto p: trigs)
+		area += p->surfaceArea();
+	PointSet result;
+	for (auto p: trigs) {
+		double n_tosample = n_approx * p->surfaceArea() / area;
+		int n = floor(n_tosample) + (sampler.get1f() < n_tosample - floor(n_tosample));
+		for (int i=0; i<n; ++i)
+			result.push_back(p->sampleSurface(sampler));
+	}
+	return result;
 }
 
 PointSet get_surface_points(const RTcore::Mesh& mesh)
 {
 	PointSet points = allvertices(mesh);
-	visualize(points);
+	console.info(points.size(), "surface points");
 	return points;
 }

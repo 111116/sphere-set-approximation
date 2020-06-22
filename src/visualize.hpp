@@ -11,7 +11,7 @@ typedef std::vector<vec3f> PointSet;
 
 std::string visualizer_mesh_filename = "";
 
-void visualize(std::vector<Sphere> spheres, std::string outfile = "scene.json", vec3f camerapos = vec3f(-5,2,-4.76543))
+void visualize(std::vector<Sphere> spheres, std::string outfile = "scene.json", vec3f camerapos = vec3f(3,2,-5.76543))
 {
 	std::ofstream fout(outfile);
 	fout << "{\"primitives\":[\n";

@@ -2,6 +2,7 @@
 
 #include "aabox.hpp"
 #include "math/matmath.hpp"
+#include "sampler.hpp"
 #include "ray.hpp"
 
 namespace RTcore
@@ -57,6 +58,18 @@ public:
 		v.z1 = std::min(v1.z, std::min(v2.z, v3.z));
 		v.z2 = std::max(v1.z, std::max(v2.z, v3.z));
 		return v;
+	}
+
+	double surfaceArea() const
+	{
+		return norm(cross(v3-v1, v2-v1))/2;
+	}
+
+	vec3f sampleSurface(Sampler& sampler) const
+	{
+		vec2f t = sampler.sampleUnitTriangle();
+		vec3f p = v1 + t.x * (v2-v1) + t.y * (v3-v1);
+		return p;
 	}
 
 private:
