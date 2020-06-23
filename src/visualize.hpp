@@ -48,3 +48,11 @@ void visualize(const PointSet& set, double visualradius = 0.01)
 	visualize(s);
 	visualizer_mesh_filename = tmp;
 }
+
+void visualize_with_mesh(const PointSet& set, double visualradius = 0.01)
+{
+	std::vector<Sphere> s;
+	for (auto p: set)
+		s.push_back(Sphere(p, visualradius));
+	visualize(s);
+}

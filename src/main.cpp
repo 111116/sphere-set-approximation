@@ -32,25 +32,18 @@ std::tuple<std::vector<Sphere>, std::vector<PointSet>>
 		std::sort(psorted[i].begin(), psorted[i].end(), cmp);
 		pcur[i] = psorted[i].begin();
 	}
-	// precompute
-
+	std::vector<double> nextloss(n);
+	for (int i=0; i<n; ++i)
+		nextloss[i] = loss(Sphere(center[i], norm(points[*pcur[i]] - center[i])));
 	// assign all points
 	for (int _=0; _<points.size(); ++_)
 	{
-		if (_ % 30 == 0) console.log("_",_);
+		if (_ % 100 == 0) console.log("_",_);
 		// find point-center pair of minimum increment in loss function
-		// bruteforce
-		auto deltaloss = [&](int i) {
-			if (pcur[i] == psorted[i].end()) {
-				return std::numeric_limits<double>::infinity();
-			}
-			double newradius = norm(points[*pcur[i]] - center[i]);
-			return loss(Sphere(center[i], newradius)) - curloss[i];
-		};
 		int best = 0;
-		double bestdelta = deltaloss(best);
+		double bestdelta = nextloss[best] - curloss[best];
 		for (int i=1; i<n; ++i) {
-			double t = deltaloss(i);
+			double t = nextloss[i] - curloss[i];
 			if (t < bestdelta) {
 				bestdelta = t;
 				best = i;
@@ -60,12 +53,22 @@ std::tuple<std::vector<Sphere>, std::vector<PointSet>>
 		// add this point to corresponding cluster
 		cluster[best].push_back(points[*pcur[best]]);
 		sphere[best].radius = norm(points[*pcur[best]] - center[best]);
-		curloss[best] = loss(sphere[best]);
+		curloss[best] = nextloss[best];
 		assigned[*pcur[best]] = true;
 		// update pcur so that they all point to unassigned points
-		for (int i=0; i<n; ++i)
-			while (pcur[i] != psorted[i].end() && assigned[*pcur[i]])
+		for (int i=0; i<n; ++i) {
+			bool recompute = false;
+			while (pcur[i] != psorted[i].end() && assigned[*pcur[i]]) {
+				recompute = true;
 				pcur[i]++;
+			}
+			if (recompute) {
+				if (pcur[i] == psorted[i].end())
+					nextloss[i] = std::numeric_limits<double>::infinity();
+				else
+					nextloss[i] = loss(Sphere(center[i], norm(points[*pcur[i]] - center[i])));
+			}
+		}
 	}
 	return {sphere, cluster};
 }
@@ -130,6 +133,7 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 	console.log("initializing...");
 	PointSet innerpoints = get_inner_points(mesh, 1000);
 	PointSet surfacepoints = get_surface_points(mesh, 1000);
+	visualize_with_mesh(surfacepoints);
 	std::vector<vec3f> center;
 	std::sample(innerpoints.begin(), innerpoints.end(), std::back_inserter(center), ns, std::mt19937(0));
 	console.log("optimizing...");
@@ -138,7 +142,9 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 	std::vector<PointSet> points;
 	for (int i=0; i<50; ++i) {
 	// step 1: point assignment
+	console.time("point assignment");
 	std::tie(sphere, points) = points_assign(center, concat(innerpoints, surfacepoints), loss);
+	console.timeEnd("point assignment");
 	// step 2: fitting & save results
 	{
 		double sumloss = 0;
