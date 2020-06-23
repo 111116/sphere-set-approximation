@@ -6,7 +6,8 @@
 #include <cmath>
 #include <algorithm>
 #include "math/vecmath.hpp"
-#include "sotv_debug.hpp"
+
+namespace debug{
 
 class SOTV
 {
@@ -14,13 +15,8 @@ public:
 	// parameters: triangle vertices, sphere center & radius
 	double operator()(vec3f v1, vec3f v2, vec3f v3, vec3f o, double r)
 	{
+		console.log("========= SOTV entering debug mode =========");
 		double result = sotv(v1,v2,v3,o,r);
-		if (isinf(result) or isnan(result)) {
-			console.warn("SOTV exceptional result:", result);
-			console.warn("arg:",v1,v2,v3,o,r);
-			debug::sotv(v1,v2,v3,o,r);
-			throw "1";
-		}
 		return result;
 	}
 
@@ -33,7 +29,7 @@ private:
 		bool out2 = (sqrlen(v2-o) > r*r);
 		bool out3 = (sqrlen(v3-o) > r*r);
 		int n_out = out1 + out2 + out3;
-		// console.log("n_vert_out:", n_out);
+		console.log("n_vert_out:", n_out);
 		if (n_out == 0) return sotv_case_a(v1, v2, v3, o,r);
 		if (n_out == 3) return sotv_case_b(v1, v2, v3, o,r);
 		if (n_out == 2) {
@@ -64,9 +60,11 @@ private:
 		double cosa = dot(ob,oc) / (norm(ob)*norm(oc));
 		double cosb = dot(oa,oc) / (norm(oa)*norm(oc));
 		double cosc = dot(oa,ob) / (norm(oa)*norm(ob));
+		// console.log("  cos",cosa,cosb,cosc);
 		double sina = std::sqrt(std::max(0.0, 1.0 - cosa * cosa));
 		double sinb = std::sqrt(std::max(0.0, 1.0 - cosb * cosb));
 		double sinc = std::sqrt(std::max(0.0, 1.0 - cosc * cosc));
+		// console.log("  sin",sina,sinb,sinc);
 		if (sina < 1e-7 or sinb < 1e-7 or sinc < 1e-7)
 			return 0;
 		double cosphi_a = (cosa - cosb * cosc) / (sinb * sinc);
@@ -143,11 +141,20 @@ private:
 		auto sqr = [](double a){return a*a;};
 		auto cub = [](double a){return a*a*a;};
 		// final formula
+		console.log("  a,phi0,r0,R",a,phi0,r0,r);
 		if (a == 0) return 0;
 		double K1 = sqrt(sqr(sin(a)) - sqr(sin(phi0)));
-		double K2 = atan(cos(a) * sin(phi0) / K1);
+		double tanK2 = cos(a) * sin(phi0) / K1;
+		console.log("  tanK2",tanK2);
+		double K2 = atan(tanK2);
+		console.log("  K1,K2",K1,K2);
+		// if (isinf(tanK2) or K1==0) K2 = PI/2;
+		console.log("  K1,K2",K1,K2);
+		console.log("  item1",  (sqr(cot(phi0)) * (K2-PI/2) + K1*csc(phi0)*cot(a)*csc(a)));
+		console.log("  item2",  (csc(phi0) * (asin(cos(a)/cos(phi0)) - PI/2) - K2 + PI/2));
 		double V = cub(r0*sin(a))/3 * (sqr(cot(phi0)) * (K2-PI/2) + K1*csc(phi0)*cot(a)*csc(a))
 			- 2.0/3*r*r*r0*sin(a) * (csc(phi0) * (asin(cos(a)/cos(phi0)) - PI/2) - K2 + PI/2);
+		console.log("swing v:",V);
 		return V;
 	}
 
@@ -155,7 +162,9 @@ private:
 	static double sotv_case_a(vec3f v1, vec3f v2, vec3f v3, vec3f o, double r)
 	{
 		double omega = solid_angle_tetrahedron(v1-o, v2-o, v3-o);
+		console.log("SR tetr:", omega);
 		double V = volume_tetrahedron(v1-o, v2-o, v3-o);
+		console.log("case a :", r*r*r*omega/3 - V);
 		return r*r*r*omega/3 - V;
 	}
 
@@ -202,6 +211,7 @@ private:
 		double vol = sotv_case_c_original(vin, v2, v3, o,r);
 		// then subtract swing volumes
 		vol -= slice_remaining(v2,v3, vin, o,r);
+		console.log("case c :",vol);
 		return vol;
 	}
 
@@ -210,14 +220,18 @@ private:
 	{
 		vec3f p0 = line_sphere_intersection_1o(vin, v2, o,r);
 		vec3f p1 = line_sphere_intersection_1o(vin, v3, o,r);
-		return sotv_case_a(p0,p1,vin,o,r) + swing_volume(p0,p1,vin,o,r);
+		double t = sotv_case_a(p0,p1,vin,o,r) + swing_volume(p0,p1,vin,o,r);
+		console.log("case co:",t);
+		return t;
 	}
 
 	// (d) 1 vert. out
 	static double sotv_case_d(vec3f vout, vec3f v2, vec3f v3, vec3f o, double r)
 	{
 		vec3f p0 = line_sphere_intersection_1o(vout, v2, o,r);
-		return sotv_case_c(v3, vout,p0, o,r) + sotv_case_a(v3,v2,p0, o,r);
+		double t = sotv_case_c(v3, vout,p0, o,r) + sotv_case_a(v3,v2,p0, o,r);
+		console.log("case d :",t);
+		return t;
 	}
 
 	static bool triangle_outside_sphere(vec3f a, vec3f b, vec3f c, vec3f o, double r)
@@ -260,3 +274,5 @@ private:
 };
 
 SOTV sotv;
+
+}

@@ -66,7 +66,7 @@ vec3f optimize(vec3f initial, std::function<double(vec3f)> loss)
 		double improve = std::accumulate(improvement.begin(), improvement.end(), 0.0);
 		console.info("improve",improve);
 		totalimprove += improve;
-		console.log("computed dir", normalized(x-x0), "from delta", x-x0);
+		// console.log("computed dir", normalized(x-x0), "from delta", x-x0);
 		dir[argmax(improvement) - improvement.begin()] = normalized(x-x0);
 		x0 = x;
 		if (improve < 1e-5) break;
