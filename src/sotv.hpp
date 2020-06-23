@@ -143,7 +143,7 @@ private:
 		auto sqr = [](double a){return a*a;};
 		auto cub = [](double a){return a*a*a;};
 		// final formula
-		if (a == 0) return 0;
+		if (phi0 >= a) return 0;
 		double K1 = sqrt(sqr(sin(a)) - sqr(sin(phi0)));
 		double K2 = atan(cos(a) * sin(phi0) / K1);
 		double V = cub(r0*sin(a))/3 * (sqr(cot(phi0)) * (K2-PI/2) + K1*csc(phi0)*cot(a)*csc(a))

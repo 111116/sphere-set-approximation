@@ -142,14 +142,13 @@ private:
 		auto cub = [](double a){return a*a*a;};
 		// final formula
 		console.log("  a,phi0,r0,R",a,phi0,r0,r);
-		if (a == 0) return 0;
+		if (phi0 >= a) return 0;
 		double K1 = sqrt(sqr(sin(a)) - sqr(sin(phi0)));
 		double tanK2 = cos(a) * sin(phi0) / K1;
 		console.log("  tanK2",tanK2);
 		double K2 = atan(tanK2);
 		console.log("  K1,K2",K1,K2);
 		// if (isinf(tanK2) or K1==0) K2 = PI/2;
-		console.log("  K1,K2",K1,K2);
 		console.log("  item1",  (sqr(cot(phi0)) * (K2-PI/2) + K1*csc(phi0)*cot(a)*csc(a)));
 		console.log("  item2",  (csc(phi0) * (asin(cos(a)/cos(phi0)) - PI/2) - K2 + PI/2));
 		double V = cub(r0*sin(a))/3 * (sqr(cot(phi0)) * (K2-PI/2) + K1*csc(phi0)*cot(a)*csc(a))

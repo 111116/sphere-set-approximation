@@ -70,12 +70,12 @@ vec3f optimize(vec3f initial, std::function<double(vec3f)> loss)
 			f = f1;
 		}
 		double improve = std::accumulate(improvement.begin(), improvement.end(), 0.0);
-		console.log("  improve",improve);
+		// console.log("  improve",improve);
 		totalimprove += improve;
 		dir[argmax(improvement) - improvement.begin()] = normalized(x-x0);
 		x0 = x;
 		if (improve < 1e-5) break;
 	}
-	console.log("total improve:", totalimprove);
+	// console.log("total improve:", totalimprove);
 	return x0;
 }

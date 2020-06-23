@@ -32,7 +32,7 @@ std::tuple<std::vector<Sphere>, std::vector<PointSet>>
 Sphere sphere_fit(const Sphere& initial, const PointSet& points, std::function<double(Sphere)> loss)
 {
 	// function to optimize
-	console.time("fit");
+	console.time("sphere fit");
 	auto target = [&](vec3f o){
 		double r = 0;
 		for (auto p: points)
@@ -42,7 +42,7 @@ Sphere sphere_fit(const Sphere& initial, const PointSet& points, std::function<d
 	Sphere sphere(optimize(initial.center, target), 0);
 	for (auto p: points)
 		sphere.radius = std::max(sphere.radius, norm(p-sphere.center));
-	console.timeEnd("fit");
+	console.timeEnd("sphere fit");
 	return sphere;
 }
 
@@ -101,25 +101,32 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 	// step 2: fitting & save results
 	{
 		double sumloss = 0;
-		for (int i=0; i<ns; ++i) {
-			checkContain(sphere[i], points[i]); // debug
-			sphere[i] = sphere_fit(sphere[i], points[i], loss);
-			checkContain(sphere[i], points[i]); // debug
+		for (int i=0; i<ns; ++i)
 			sumloss += loss(sphere[i]);
-		}
-		console.log("total loss:", sumloss);
+		console.log("total loss 1:", sumloss);
+	}
+	for (int i=0; i<ns; ++i) {
+		checkContain(sphere[i], points[i]); // debug
+		sphere[i] = sphere_fit(sphere[i], points[i], loss);
+		checkContain(sphere[i], points[i]); // debug
+	}
+	{
+		double sumloss = 0;
+		for (int i=0; i<ns; ++i)
+			sumloss += loss(sphere[i]);
+		console.log("total loss 2:", sumloss);
 		// save best result so far
 		if (sumloss < bestsumloss) {
 			bestsumloss = sumloss;
 			bestresult = sphere;
 		}
+		visualize(bestresult);
 	}
 	// step 3: teleportation
 	// teleport(sphere, points, loss);
 	for (int i=0; i<ns; ++i)
 		center[i] = sphere[i].center;
 	}
-	visualize(bestresult);
 	return bestresult;
 }
 
