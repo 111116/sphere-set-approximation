@@ -17,6 +17,13 @@ auto argmax(Container& c, Fn&& key) -> decltype(std::begin(c))
     return std::max_element(std::begin(c), std::end(c), cmp);
 }
 
+template<typename Container>
+auto argmax(Container& c) -> decltype(std::begin(c))
+{  
+    if ( std::begin(c) == std::end(c) ) 
+       throw std::invalid_argument("empty container is not allowed.");
+    return std::max_element(std::begin(c), std::end(c));
+}
 
 template<typename T>
 std::vector<T> concat(const std::vector<T>& a, const std::vector<T>& b)

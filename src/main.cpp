@@ -8,7 +8,7 @@
 #include "normal_outward_test.hpp"
 #include "util.hpp"
 #include "pointset.hpp"
-
+#include "powell.hpp"
 
 std::tuple<std::vector<Sphere>, std::vector<PointSet>>
 	points_assign(const std::vector<vec3f>& center, const PointSet& points, std::function<double(Sphere)> loss)
@@ -29,10 +29,16 @@ std::tuple<std::vector<Sphere>, std::vector<PointSet>>
 	return {sphere, cluster};
 }
 
-Sphere sphere_fit(const Sphere& initial, const PointSet& points)
+Sphere sphere_fit(const Sphere& initial, const PointSet& points, std::function<double(Sphere)> loss)
 {
-	// naive method: take average as center
-	Sphere sphere(average(points), 0);
+	// function to optimize
+	auto target = [&](vec3f o){
+		double r = 0;
+		for (auto p: points)
+			r = std::max(r, norm(p-o));
+		return loss(Sphere(o,r));
+	};
+	Sphere sphere(optimize(initial.center, target), 0);
 	for (auto p: points)
 		sphere.radius = std::max(sphere.radius, norm(p-sphere.center));
 	return sphere;
@@ -95,7 +101,7 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 		double sumloss = 0;
 		for (int i=0; i<ns; ++i) {
 			checkContain(sphere[i], points[i]); // debug
-			sphere[i] = sphere_fit(sphere[i], points[i]);
+			sphere[i] = sphere_fit(sphere[i], points[i], loss);
 			checkContain(sphere[i], points[i]); // debug
 			sumloss += loss(sphere[i]);
 		}

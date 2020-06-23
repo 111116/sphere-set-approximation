@@ -17,6 +17,7 @@ public:
 		if (isinf(result) or isnan(result)) {
 			console.warn("SOTV exceptional result:", result);
 			console.warn("arg:",v1,v2,v3,o,r);
+			throw "1";
 		}
 		return result;
 	}
