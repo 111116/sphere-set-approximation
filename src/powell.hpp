@@ -9,8 +9,6 @@
 
 double optimize(double initial, std::function<double(double)> loss)
 {
-	// console.log("LINEOPTIMIZE",loss(initial));
-	// console.log("neighboring", loss(initial-0.01), loss(initial+0.01));
 	// determine search interval
 	double f_initial = loss(initial);
 	double l = initial-1, r = initial+1;
@@ -23,20 +21,29 @@ double optimize(double initial, std::function<double(double)> loss)
 		r += d;
 		fr = loss(r);
 	}
-	// console.log("line search interval",l,r);
 	// Golden-section search
 	const double gr = (std::sqrt(5.0) - 1) / 2;
     double c = r - (r-l) * gr;
     double d = l + (r-l) * gr;
+    double fc = loss(c);
+    double fd = loss(d);
     while (std::abs(c - d) > 1e-5) {
-        if (loss(c) < loss(d))
+        if (fc < fd)
+        {
             r = d;
+            d = c;
+            fd = fc;
+            c = l + (d-l) * gr;
+            fc = loss(c);
+        }
         else
+        {
             l = c;
-        // recompute c and d to avoid loss of precision
-        // (but also doubling computational cost)
-        c = r - (r-l) * gr;
-        d = l + (r-l) * gr;
+            c = d;
+            fc = fd;
+            d = r - (r-c) * gr;
+            fd = loss(d);
+        }
     }
     // check if we have really done at least some optimization
     if (loss((l+r)/2) > loss(initial))
@@ -46,7 +53,7 @@ double optimize(double initial, std::function<double(double)> loss)
 
 vec3f optimize(vec3f initial, std::function<double(vec3f)> loss)
 {
-	console.info("Powell optimization, initial loss", loss(initial));
+	// Powell's method
 	std::vector<vec3f> dir = {{1,0,0},{0,1,0},{0,0,1}};
 	vec3f x0 = initial;
 	double totalimprove = 0;
@@ -55,7 +62,6 @@ vec3f optimize(vec3f initial, std::function<double(vec3f)> loss)
 		vec3f x = x0;
 		double f = loss(x0);
 		for (auto d: dir) {
-			// console.log("CALL LINE DIR",d);
 			double t = optimize(0, [&](double t){return loss(x+t*d);});
 			vec3f x1 = x+t*d;
 			double f1 = loss(x1);
@@ -64,9 +70,8 @@ vec3f optimize(vec3f initial, std::function<double(vec3f)> loss)
 			f = f1;
 		}
 		double improve = std::accumulate(improvement.begin(), improvement.end(), 0.0);
-		console.info("improve",improve);
+		console.log("  improve",improve);
 		totalimprove += improve;
-		// console.log("computed dir", normalized(x-x0), "from delta", x-x0);
 		dir[argmax(improvement) - improvement.begin()] = normalized(x-x0);
 		x0 = x;
 		if (improve < 1e-5) break;

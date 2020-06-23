@@ -32,6 +32,7 @@ std::tuple<std::vector<Sphere>, std::vector<PointSet>>
 Sphere sphere_fit(const Sphere& initial, const PointSet& points, std::function<double(Sphere)> loss)
 {
 	// function to optimize
+	console.time("fit");
 	auto target = [&](vec3f o){
 		double r = 0;
 		for (auto p: points)
@@ -41,6 +42,7 @@ Sphere sphere_fit(const Sphere& initial, const PointSet& points, std::function<d
 	Sphere sphere(optimize(initial.center, target), 0);
 	for (auto p: points)
 		sphere.radius = std::max(sphere.radius, norm(p-sphere.center));
+	console.timeEnd("fit");
 	return sphere;
 }
 
