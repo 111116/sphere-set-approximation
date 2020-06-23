@@ -133,9 +133,9 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 	console.log("initializing...");
 	PointSet innerpoints = get_inner_points(mesh, 1000);
 	PointSet surfacepoints = get_surface_points(mesh, 1000);
-	visualize_with_mesh(surfacepoints);
+	visualize_with_mesh(surfacepoints, 0.02);
 	std::vector<vec3f> center;
-	std::sample(innerpoints.begin(), innerpoints.end(), std::back_inserter(center), ns, std::mt19937(0));
+	std::sample(innerpoints.begin(), innerpoints.end(), std::back_inserter(center), ns, std::mt19937(rand()));
 	console.log("optimizing...");
 	// iterate over 3 steps
 	std::vector<Sphere> sphere;

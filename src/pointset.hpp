@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_set>
+#include <algorithm>
 #include <tuple>
 #include "rtcore/mesh.hpp"
 #include "rtcore/mt19937sampler.hpp"
@@ -121,9 +122,36 @@ PointSet sample_surface(const RTcore::Mesh& mesh, int n_approx)
 	return result;
 }
 
+PointSet sample_surface_bestcandidate(const RTcore::Mesh& mesh, int n_approx)
+{
+	int n_candid = 10;
+	PointSet pool = sample_surface(mesh, n_approx*n_candid);
+	while (pool.size() < n_approx * n_candid) {
+		PointSet spool = sample_surface(mesh, 100);
+		pool.insert(pool.end(), spool.begin(), spool.end());
+	}
+	std::shuffle(pool.begin(), pool.end(), std::mt19937(rand()));
+	PointSet result;
+	for (int i=0; i<n_approx; ++i) {
+		double bestdist = 0;
+		int best = 0;
+		for (int j=i*n_candid; j<(i+1)*n_candid; j++) {
+			double dist = std::numeric_limits<double>::infinity();
+			for (auto p: result)
+				dist = std::min(dist, sqrlen(p - pool[j]));
+			if (dist > bestdist) {
+				bestdist = dist;
+				best = j;
+			}
+		}
+		result.push_back(pool[best]);
+	}
+	return result;
+}
+
 PointSet get_surface_points(const RTcore::Mesh& mesh, int n_approx = 10000)
 {
-	PointSet points = sample_surface(mesh, n_approx);
+	PointSet points = sample_surface_bestcandidate(mesh, n_approx);
 	// don't need all vertices if we don't want to be strict
 	// PointSet points = allvertices(mesh);
 	console.log(points.size(), "surface points");
