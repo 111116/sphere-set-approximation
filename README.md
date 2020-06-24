@@ -30,9 +30,9 @@ We approximate a solid object represented as a triangle mesh by a bounding set o
 
 ### Optimization steps
 
-1. Fix the centers of spheres. Greedily assign points to them, minimizing OV (outside volume)
-2. Fix the point clusters. Adjust the spheres using Powell's method, minimizing OV
-3. Teleportation: Remove the most overlapped sphere. Split the sphere with most OV
+1. Fix the centers of spheres. Greedily assign points to them, minimizing SOV
+2. Fix the point clusters. Adjust the spheres using Powell's method, minimizing SOV
+3. Teleportation: Remove the most overlapped sphere. Split the sphere with most SOV
 
 Alternate between 1 and 2, triggering 3 whenever failing to reduce loss.
 
