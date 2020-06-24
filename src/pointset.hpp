@@ -5,6 +5,7 @@
 #include <tuple>
 #include "rtcore/mesh.hpp"
 #include "rtcore/mt19937sampler.hpp"
+#include "point_in_mesh.hpp"
 #include "math/vecmath.hpp"
 #include "visualize.hpp"
 #include "util.hpp"
@@ -102,6 +103,22 @@ PointSet get_inner_points(const RTcore::Mesh& mesh, int n_approx = 10000)
 	points = voxelized(mesh, vxsize);
 	console.log(points.size(), "inner points");
 	return points;
+}
+
+
+double volume(const RTcore::Mesh& mesh, int n_approx = 1000000)
+{
+	// voxel number estimate
+	auto aabb = mesh.boundingVolume();
+	double vxsize = std::cbrt((aabb.x2-aabb.x1)*(aabb.y2-aabb.y1)*(aabb.z2-aabb.z1))/200;
+	PointSet points = voxelized(mesh, vxsize);
+	// resample with estimated density
+	// console.log("!");
+	// console.log("ps",points.size());
+	// vxsize *= std::cbrt(points.size() / n_approx);
+	// points = voxelized(mesh, vxsize);
+	// console.log("!");
+	return points.size() * vxsize * vxsize * vxsize;
 }
 
 

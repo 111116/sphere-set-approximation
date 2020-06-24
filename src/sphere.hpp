@@ -84,3 +84,52 @@ std::vector<double> overlap_ratio(const std::vector<Sphere>& sphere, int n_appro
 	}
 	return ratio;
 }
+
+// volume of union geometry
+// complexity: O(|sphere|^2 * n_approx) but in fact fast enough
+double volume(const std::vector<Sphere>& sphere, int n_approx = 10000000)
+{
+	double total = 0;
+	// accumulate of each sphere: volume it doesn't shared with spheres later
+	for (int i=0; i<sphere.size(); ++i)
+	{
+		const Sphere s = sphere[i];
+		int n_inside = 0, n_overlap = 0;
+		std::vector<Sphere> others;
+		for (int j=i+1; j<sphere.size(); ++j)
+			if (norm(sphere[j].center - s.center) < sphere[j].radius + s.radius)
+				others.push_back(sphere[j]);
+		if (others.empty()) {
+			total += s.volume();
+			continue;
+		}
+		const double stepsize = 2*s.radius / std::cbrt(n_approx);
+		const double r2 = s.radius * s.radius;
+		for (double x = s.center.x - s.radius; x < s.center.x + s.radius; x += stepsize)
+		for (double y = s.center.y - s.radius; y < s.center.y + s.radius; y += stepsize)
+		for (double z = s.center.z - s.radius; z < s.center.z + s.radius; z += stepsize)
+		{
+			bool inside = (sqrlen(s.center - vec3f(x,y,z)) < r2);
+			n_inside += inside;
+			if (!inside) continue;
+			bool overlap = false;
+			if (sqrlen(others[0].center - vec3f(x,y,z)) < others[0].radius * others[0].radius)
+			{
+				overlap = true;
+			}
+			else {
+				for (int j=1; j<others.size(); ++j) {
+					if (sqrlen(others[j].center - vec3f(x,y,z)) < others[j].radius * others[j].radius)
+					{
+						overlap = true;
+						std::swap(others[0], others[j]);
+						break;
+					}
+				}
+			}
+			n_overlap += overlap;
+		}
+		total += s.volume() * (1.0 - (double)n_overlap / n_inside);
+	}
+	return total;
+}

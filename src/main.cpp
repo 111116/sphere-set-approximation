@@ -233,6 +233,8 @@ int main(int argc, char* argv[])
 
 	auto spheres = sphere_set_approximate(mesh, ns, 10000);
 
+	console.log("Evaluating...");
+	console.info("Relative Outside Volume:", volume(spheres)/volume(mesh)-1);
 	for (auto s: spheres)
 		std::cout << s.center << " " << s.radius << std::endl;
 }
