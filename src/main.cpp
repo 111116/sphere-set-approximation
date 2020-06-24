@@ -119,15 +119,15 @@ void teleport(std::vector<Sphere>& sphere, std::vector<PointSet>& points, std::f
 }
 
 
-std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
+std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int npoint)
 {
 	double bestsumloss = INF;
 	std::vector<Sphere> bestresult;
 	auto loss = [&](Sphere s){return sov(mesh,s);};
 	// initialize
-	console.log("initializing...");
-	PointSet innerpoints = get_inner_points(mesh, 1000);
-	PointSet surfacepoints = get_surface_points(mesh, 1000);
+	console.log("initializing...  ns:",ns);
+	PointSet innerpoints = get_inner_points(mesh, npoint/2);
+	PointSet surfacepoints = get_surface_points(mesh, npoint/2);
 	visualize_with_mesh(surfacepoints, 0.02);
 	std::vector<vec3f> center;
 	// iterate over 3 steps
@@ -166,10 +166,8 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 				// step 2: fitting & save results
 				console.time("sphere fit");
 				for (int i=0; i<ns; ++i) {
-					checkContain(sphere[i], points[i]); // debug
 					sphere[i] = sphere_fit(sphere[i], points[i], loss);
 					center[i] = sphere[i].center;
-					checkContain(sphere[i], points[i]); // debug
 				}
 				console.timeEnd("sphere fit");
 				{
@@ -191,21 +189,50 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 			visualize(bestresult);
 		}
 	}
+	// final iteration
+	console.log("final iteration...");
+	for (int i=0; i<ns; ++i) {
+		center[i] = bestresult[i].center;
+	}
+	double inner_bestloss = INF;
+	for (int iter_b=0; iter_b<100; ++iter_b) {
+		// step 1: point assignment
+		console.time("point assignment");
+		std::tie(sphere, points) = points_assign(center, concat(innerpoints, surfacepoints), loss);
+		console.timeEnd("point assignment");
+		// step 2: fitting & save results
+		console.time("sphere fit");
+		for (int i=0; i<ns; ++i) {
+			sphere[i] = sphere_fit(sphere[i], points[i], loss);
+			center[i] = sphere[i].center;
+		}
+		console.timeEnd("sphere fit");
+		{
+			double sumloss = checkresult();
+			if (sumloss > inner_bestloss - 1e-5) break;
+			inner_bestloss = sumloss;
+		}
+	}
+	visualize(bestresult);
 	return bestresult;
 }
 
 int main(int argc, char* argv[])
 {
-	if (argc <= 1)
+	if (argc <= 2)
 	{
-		console.error("Usage:", argv[0], "<obj>");
+		console.error("Usage:", argv[0], "<obj> <n_sphere> [n_point = 10000]");
 		return 1;
 	}
 	visualizer_mesh_filename = argv[1];
 	RTcore::Mesh mesh = RTcore::objmesh(argv[1]);
 	test_all_normal_outward(mesh);
+	int ns = atoi(argv[2]);
+	int np = 10000;
+	if (argc > 3) np = atoi(argv[3]);
 
-	auto spheres = sphere_set_approximate(mesh, 50);
+	auto spheres = sphere_set_approximate(mesh, ns, 10000);
 
-
+	for (auto s: spheres)
+		std::cout << s.center << " " << s.radius << std::endl;
 }
