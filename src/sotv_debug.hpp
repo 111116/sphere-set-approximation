@@ -113,7 +113,7 @@ private:
 		double B = 2 * dot(b-a, a-o);
 		double C = sqrlen(a-o) - r*r;
 		double delta = B*B - 4*A*C;
-		if (delta < 0)
+		if (delta <= 0)
 			return false;
 		double d1 = (-B - std::sqrt(delta)) / (2*A);
 		double d2 = (-B + std::sqrt(delta)) / (2*A);
@@ -143,7 +143,7 @@ private:
 		auto cub = [](double a){return a*a*a;};
 		// final formula
 		console.log("  a,phi0,r0,R",a,phi0,r0,r);
-		if (phi0 >= a) return 0;
+		if (phi0 >= a || std::abs(phi0)<1e-12) return 0;
 		double K1 = sqrt(sqr(sin(a)) - sqr(sin(phi0)));
 		double tanK2 = cos(a) * sin(phi0) / K1;
 		console.log("  tanK2",tanK2);

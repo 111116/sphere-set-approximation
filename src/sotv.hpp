@@ -115,7 +115,7 @@ private:
 		double B = 2 * dot(b-a, a-o);
 		double C = sqrlen(a-o) - r*r;
 		double delta = B*B - 4*A*C;
-		if (delta < 0)
+		if (delta <= 0)
 			return false;
 		double d1 = (-B - std::sqrt(delta)) / (2*A);
 		double d2 = (-B + std::sqrt(delta)) / (2*A);
@@ -144,7 +144,7 @@ private:
 		auto sqr = [](double a){return a*a;};
 		auto cub = [](double a){return a*a*a;};
 		// final formula
-		if (phi0 >= a) return 0;
+		if (phi0 >= a || std::abs(phi0)<1e-12) return 0;
 		double K1 = sqrt(sqr(sin(a)) - sqr(sin(phi0)));
 		double K2 = atan(cos(a) * sin(phi0) / K1);
 		double V = cub(r0*sin(a))/3 * (sqr(cot(phi0)) * (K2-PI/2) + K1*csc(phi0)*cot(a)*csc(a))
