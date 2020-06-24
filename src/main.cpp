@@ -133,6 +133,18 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 	// iterate over 3 steps
 	std::vector<Sphere> sphere;
 	std::vector<PointSet> points;
+	auto checkresult = [&](){
+		double sumloss = 0;
+		for (int i=0; i<ns; ++i)
+			sumloss += loss(sphere[i]);
+		console.log("TOTAL LOSS:", sumloss);
+		// save best result so far
+		if (sumloss < bestsumloss) {
+			bestsumloss = sumloss;
+			bestresult = sphere;
+		}
+		return sumloss;
+	};
 	for (int n_trial = 0; n_trial < 1; ++n_trial)
 	{
 		console.log("optimizing...");
@@ -146,27 +158,23 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 				console.time("point assignment");
 				std::tie(sphere, points) = points_assign(center, concat(innerpoints, surfacepoints), loss);
 				console.timeEnd("point assignment");
+				{
+					double sumloss = checkresult();
+					if (sumloss > inner_bestloss - 1e-5) break;
+					inner_bestloss = sumloss;
+				}
 				// step 2: fitting & save results
 				console.time("sphere fit");
 				for (int i=0; i<ns; ++i) {
 					checkContain(sphere[i], points[i]); // debug
 					sphere[i] = sphere_fit(sphere[i], points[i], loss);
+					center[i] = sphere[i].center;
 					checkContain(sphere[i], points[i]); // debug
 				}
 				console.timeEnd("sphere fit");
 				{
-					double sumloss = 0;
-					for (int i=0; i<ns; ++i)
-						sumloss += loss(sphere[i]);
-					console.log("TOTAL LOSS 2:", sumloss);
-					// save best result so far
-					if (sumloss < bestsumloss) {
-						bestsumloss = sumloss;
-						bestresult = sphere;
-					}
-					if (sumloss > inner_bestloss - 1e-5) {
-						break;
-					}
+					double sumloss = checkresult();
+					if (sumloss > inner_bestloss - 1e-5) break;
 					inner_bestloss = sumloss;
 				}
 			}
