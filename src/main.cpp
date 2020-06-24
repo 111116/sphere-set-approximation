@@ -38,7 +38,7 @@ std::tuple<std::vector<Sphere>, std::vector<PointSet>>
 	// assign all points
 	for (int _=0; _<points.size(); ++_)
 	{
-		if (_ % 100 == 0) console.log("_",_);
+		// if (_ % 100 == 0) console.log("_",_);
 		// find point-center pair of minimum increment in loss function
 		int best = 0;
 		double bestdelta = nextloss[best] - curloss[best];
@@ -135,7 +135,7 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 	// iterate over 3 steps
 	std::vector<Sphere> sphere;
 	std::vector<PointSet> points;
-	for (int i=0; i<1; ++i) {
+	for (int i=0; i<10; ++i) {
 	// step 1: point assignment
 	console.time("point assignment");
 	std::tie(sphere, points) = points_assign(center, concat(innerpoints, surfacepoints), loss);
@@ -145,7 +145,7 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 		double sumloss = 0;
 		for (int i=0; i<ns; ++i)
 			sumloss += loss(sphere[i]);
-		console.log("total loss 1:", sumloss);
+		console.log("TOTAL LOSS 1:", sumloss);
 	}
 	console.time("sphere fit");
 	for (int i=0; i<ns; ++i) {
@@ -158,7 +158,7 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 		double sumloss = 0;
 		for (int i=0; i<ns; ++i)
 			sumloss += loss(sphere[i]);
-		console.log("total loss 2:", sumloss);
+		console.log("TOTAL LOSS 2:", sumloss);
 		// save best result so far
 		if (sumloss < bestsumloss) {
 			bestsumloss = sumloss;

@@ -18,7 +18,8 @@ bool point_in_mesh(vec3f p, const RTcore::Mesh& mesh)
 			n_even += 1;
 		else
 			n_odd += 1;
-		if (n_odd && n_even) console.log("oddeven",n_odd,n_even);
 	}
+	// if (n_odd && n_even) // edge case
+	// 	console.log("point_in_mesh: contradict",n_odd,n_even);
 	return (n_odd > n_even);
 }

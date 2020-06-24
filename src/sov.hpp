@@ -16,8 +16,17 @@ double sov(const RTcore::Mesh& mesh, vec3f o, double r)
 	auto sgn = [](double x){return x>0?1:x<0?-1:0;};
 	for (auto t : mesh.list)
 		s += sotv(t->v1, t->v2, t->v3, o,r) * sgn(dot(t->v1-o, t->planeNormal));
-	if (!point_in_mesh(o, mesh))
+	if (s < 0)
+	if (!point_in_mesh(o, mesh)) {
+		if (s > 0) console.log("sov ERR SIGN");
 		s += 4.0/3*PI * r*r*r;
+	}
+	else {
+		// silently fix edge case which point_in_mesh fails to handle
+		if (s<0) {
+			s += 4.0/3*PI * r*r*r;
+		}
+	}
 	return s;
 }
 
