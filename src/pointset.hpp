@@ -31,8 +31,8 @@ std::tuple<vec3f, vec3f> farthest_points_apart(const PointSet& p)
 	for (int _=0; _<1000; ++_)
 	{
 		vec3f axis = RTcore::SharedSampler::sampleUnitSphereSurface();
-		double minproj = std::numeric_limits<double>::infinity();
-		double maxproj = -std::numeric_limits<double>::infinity();
+		double minproj = INF;
+		double maxproj = -INF;
 		vec3f minpoint, maxpoint;
 		for (vec3f x: p) {
 			double proj = dot(x, axis);
@@ -136,7 +136,7 @@ PointSet sample_surface_bestcandidate(const RTcore::Mesh& mesh, int n_approx)
 		double bestdist = 0;
 		int best = 0;
 		for (int j=i*n_candid; j<(i+1)*n_candid; j++) {
-			double dist = std::numeric_limits<double>::infinity();
+			double dist = INF;
 			for (auto p: result)
 				dist = std::min(dist, sqrlen(p - pool[j]));
 			if (dist > bestdist) {

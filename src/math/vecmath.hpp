@@ -9,7 +9,7 @@ typedef double data_t;
 
 
 const data_t PI = acos(-1);
-
+const data_t INF = std::numeric_limits<data_t>::infinity();
 
 struct vec2f
 {

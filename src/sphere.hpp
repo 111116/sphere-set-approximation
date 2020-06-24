@@ -41,7 +41,6 @@ double sphere_overlap_volume(Sphere a, Sphere b)
 // complexity: O(|sphere|^2 * n_approx) but in fact fast enough
 std::vector<double> overlap_ratio(const std::vector<Sphere>& sphere, int n_approx = 1000000)
 {
-	console.time("overlap ratio");
 	std::vector<double> ratio;
 	for (int i=0; i<sphere.size(); ++i)
 	{
@@ -83,6 +82,5 @@ std::vector<double> overlap_ratio(const std::vector<Sphere>& sphere, int n_appro
 		}
 		ratio.push_back((double)n_overlap / n_inside);
 	}
-	console.timeEnd("overlap ratio");
 	return ratio;
 }
