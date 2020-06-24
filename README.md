@@ -6,7 +6,13 @@ Approximate a mesh by bounding it with a set of spheres, using method described 
 
 [*Variational Sphere set Approximation for Solid Objects*](http://dx.doi.org/10.1007/s00371-006-0052-0)
 
-The SOTV defined in this paper is bugfixed.
+with several minor changes:
+
+- bugfixes SOTV, which in this paper is overestimated in some cases
+- provides an analytic algorithm to solve swing volume
+- voxel size doesn't have to be manually specified
+- surface points are generated using best-candidate instead of random sampling 
+- point assignment
 
 ### 预处理
 

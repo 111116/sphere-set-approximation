@@ -104,13 +104,8 @@ void checkContain(const Sphere& s, const PointSet& points)
 // Note: radii are invalidated after teleportation
 void teleport(std::vector<Sphere>& sphere, std::vector<PointSet>& points, std::function<double(Sphere)> loss)
 {
-	auto overlap_ratio = [&](Sphere s){
-		double overlap = 0;
-		for (auto s1: sphere)
-			overlap = std::max(overlap, sphere_overlap_volume(s, s1));
-		return overlap / s.volume();
-	};
-	auto to_remove = argmax(sphere, overlap_ratio);
+	auto t = overlap_ratio(sphere);
+	auto to_remove = sphere.begin() + (argmax(t) - t.begin());
 	auto to_split = argmax(sphere, loss);
 	if (to_remove == to_split) {
 		console.warn("to_remove = to_split");
@@ -140,7 +135,7 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 	// iterate over 3 steps
 	std::vector<Sphere> sphere;
 	std::vector<PointSet> points;
-	for (int i=0; i<50; ++i) {
+	for (int i=0; i<1; ++i) {
 	// step 1: point assignment
 	console.time("point assignment");
 	std::tie(sphere, points) = points_assign(center, concat(innerpoints, surfacepoints), loss);
@@ -172,7 +167,7 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns)
 		visualize(bestresult);
 	}
 	// step 3: teleportation
-	// teleport(sphere, points, loss);
+	teleport(sphere, points, loss);
 	for (int i=0; i<ns; ++i)
 		center[i] = sphere[i].center;
 	}

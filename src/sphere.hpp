@@ -37,3 +37,52 @@ double sphere_overlap_volume(Sphere a, Sphere b)
 	return sphere_overlap_volume(a.center, a.radius, b.center, b.radius);
 }
 
+// of each sphere, ratio of volume shared with at least one other spherein the set to its total volume
+// complexity: O(|sphere|^2 * n_approx) but in fact fast enough
+std::vector<double> overlap_ratio(const std::vector<Sphere>& sphere, int n_approx = 1000000)
+{
+	console.time("overlap ratio");
+	std::vector<double> ratio;
+	for (int i=0; i<sphere.size(); ++i)
+	{
+		const Sphere s = sphere[i];
+		int n_inside = 0, n_overlap = 0;
+		std::vector<Sphere> others;
+		for (int j=0; j<sphere.size(); ++j)
+			if (j!=i && norm(sphere[j].center - s.center) < sphere[j].radius + s.radius)
+				others.push_back(sphere[j]);
+		if (others.empty()) {
+			ratio.push_back(0.0);
+			continue;
+		}
+		const double stepsize = 2*s.radius / std::cbrt(n_approx);
+		const double r2 = s.radius * s.radius;
+		for (double x = s.center.x - s.radius; x < s.center.x + s.radius; x += stepsize)
+		for (double y = s.center.y - s.radius; y < s.center.y + s.radius; y += stepsize)
+		for (double z = s.center.z - s.radius; z < s.center.z + s.radius; z += stepsize)
+		{
+			bool inside = (sqrlen(s.center - vec3f(x,y,z)) < r2);
+			n_inside += inside;
+			if (!inside) continue;
+			bool overlap = false;
+			if (sqrlen(others[0].center - vec3f(x,y,z)) < others[0].radius * others[0].radius)
+			{
+				overlap = true;
+			}
+			else {
+				for (int j=1; j<others.size(); ++j) {
+					if (sqrlen(others[j].center - vec3f(x,y,z)) < others[j].radius * others[j].radius)
+					{
+						overlap = true;
+						std::swap(others[0], others[j]);
+						break;
+					}
+				}
+			}
+			n_overlap += overlap;
+		}
+		ratio.push_back((double)n_overlap / n_inside);
+	}
+	console.timeEnd("overlap ratio");
+	return ratio;
+}
