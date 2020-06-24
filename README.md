@@ -14,37 +14,25 @@ with several minor changes:
 - surface points are generated using best-candidate instead of random sampling 
 - point assignment
 
-### 预处理
+### Usage
 
-内部点：体素化网格，选取所有网格内部的体素顶点
+```bash
+cd src
+make
+./main ../armadillo.obj 64
+```
 
-表面点：在表面三角形等概率采样
+The algorithm runs very slow (proportional to number of faces).
 
-随机选取内部点作为球心
+### Abstract of the Paper
 
-1. 
+We approximate a solid object represented as a triangle mesh by a bounding set of spheres having min-imal summed volume outside the object. We show how outside volume for a single sphere can be computed using a simple integration over the object’s triangles. We then minimize the total outside volume over all spheresin the set using a variant of iterative Lloyd clustering which splits the mesh points into sets and bounds each with an outside volume-minimizing sphere. The resulting sphere sets are tighter than those of previous methods. Inexperiments comparing against a state-of-the-art alternative (adaptive medial axis), our method often requires half or fewer as many spheres to obtain the same error, under a variety of error metrics including total outsidevolume, shadowing fidelity, and proximity measurement.
 
-将点归给SOV增量最小的球（相同时选取距离最小）
+### Optimization steps
 
-加速：对每个球打表SOV下界，求出下界最小的SOV的实际值后可以删去下界更大的
+1. Fix the centers of spheres. Greedily assign points to them, minimizing OV (outside volume)
+2. Fix the point clusters. Adjust the spheres using Powell's method, minimizing OV
+3. Teleportation: Remove the most overlapped sphere. Split the sphere with most OV
 
-2.
-
-包围球调整
-
-Powell's method
-
-3.
-
-突变
-
-将SOV最大的球分裂，初始选取在最远的两个点；
-
-删去被重叠比例最大的球
-
-重复1，2
-
-
-
-
+Alternate between 1 and 2, triggering 3 whenever failing to reduce loss.
 
