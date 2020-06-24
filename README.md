@@ -26,7 +26,7 @@ The algorithm runs very slow (proportional to number of faces).
 
 ### Abstract of the Paper
 
-We approximate a solid object represented as a triangle mesh by a bounding set of spheres having min-imal summed volume outside the object. We show how outside volume for a single sphere can be computed using a simple integration over the object’s triangles. We then minimize the total outside volume over all spheresin the set using a variant of iterative Lloyd clustering which splits the mesh points into sets and bounds each with an outside volume-minimizing sphere. The resulting sphere sets are tighter than those of previous methods. Inexperiments comparing against a state-of-the-art alternative (adaptive medial axis), our method often requires half or fewer as many spheres to obtain the same error, under a variety of error metrics including total outsidevolume, shadowing fidelity, and proximity measurement.
+We approximate a solid object represented as a triangle mesh by a bounding set of spheres having minimal summed volume outside the object. We show how outside volume for a single sphere can be computed using a simple integration over the object’s triangles. We then minimize the total outside volume over all spheresin the set using a variant of iterative Lloyd clustering which splits the mesh points into sets and bounds each with an outside volume-minimizing sphere. The resulting sphere sets are tighter than those of previous methods. In experiments comparing against a state-of-the-art alternative (adaptive medial axis), our method often requires half or fewer as many spheres to obtain the same error, under a variety of error metrics including total outside volume, shadowing fidelity, and proximity measurement.
 
 ### Optimization steps
 
