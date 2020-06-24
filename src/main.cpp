@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
 	int np = 10000;
 	if (argc > 3) np = atoi(argv[3]);
 
-	auto spheres = sphere_set_approximate(mesh, ns, 10000);
+	auto spheres = sphere_set_approximate(mesh, ns, np);
 
 	console.log("Evaluating...");
 	console.info("Relative Outside Volume:", volume(spheres)/volume(mesh)-1);
