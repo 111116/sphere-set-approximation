@@ -132,9 +132,10 @@ private:
 		vec3f p = (p0 + p1) / 2;
 		// transform to 2D view (OC perpendicular to p0-p1)
 		vec3f oc = c - o;
+		// console.log("  swing arg:",p0,p1,c,o,r);
 		oc -= (p1-p0) / sqrlen(p1-p0) * dot(oc, p1-p0);
 		c = o + oc;
-		double a = acos(dot(c-p,o-p) / (norm(c-p) * norm(o-p)));
+		double a = acos(std::min(1.0, std::max(-1.0, dot(c-p,o-p) / (norm(c-p) * norm(o-p)))));
 		double r0 = norm(p - o);
 		double h = r - r0;
 		double phi0 = asin(r0 * sin(a) / r);

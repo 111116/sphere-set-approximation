@@ -136,7 +136,8 @@ private:
 		vec3f oc = c - o;
 		oc -= (p1-p0) / sqrlen(p1-p0) * dot(oc, p1-p0);
 		c = o + oc;
-		double a = acos(dot(c-p,o-p) / (norm(c-p) * norm(o-p)));
+		double cosa = dot(c-p,o-p) / (norm(c-p) * norm(o-p));
+		double a = acos(std::min(1.0, std::max(-1.0, cosa)));
 		double r0 = norm(p - o);
 		double h = r - r0;
 		double phi0 = asin(r0 * sin(a) / r);
