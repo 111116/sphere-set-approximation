@@ -203,18 +203,22 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int
 				i = 1; // next step: step1
 			}
 			else {
-				if (risecnt < 10) {
+				if (risecnt < 2) {
 					curloss = loss2;
 					sphere = sphere2;
 					points = points2;
 					i = 1; // next step: step1
 					risecnt++;
+					console.log("accepting worsening mutation");
 				}
-				break;
+				else {
+					break;
+				}
 			}
 		}
 	}
 	// final iteration
+	points = {};
 	console.info("final iteration...");
 	curloss = checkresult(bestresult);
 	while (true) {
@@ -223,12 +227,15 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int
 		if (loss1 < curloss - 1e-6) {
 			curloss = loss1;
 			bestresult = sphere1;
+			points = points1;
 		}
 		else {
 			break;
 		}
 	}
+	if (points.empty()) console.error("WTF"); // TODO
 	// final expanding
+	visualize(bestresult);
 	console.info("final expanding...");
 	PointSet finalpoints = get_surface_points(mesh, 100000);
 	for (auto p: finalpoints) {
@@ -237,9 +244,12 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int
 		iter->radius = std::max(iter->radius, norm(p - iter->center));
 		points[iter - bestresult.begin()].push_back(p);
 	}
+	checkresult(bestresult);
 	for (int i=0; i<ns; ++i) {
+		checkContain(bestresult[i], points[i]);
 		bestresult[i] = sphere_fit(bestresult[i], points[i], loss);
 	}
+	checkresult(bestresult);
 	visualize(bestresult);
 	return bestresult;
 }
