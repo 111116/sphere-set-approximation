@@ -119,25 +119,26 @@ void teleport(std::vector<Sphere>& sphere, std::vector<PointSet>& points, std::f
 }
 
 
-std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int npoint)
+std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int ninner, int nsurface)
 {
 	double bestsumloss = INF;
 	std::vector<Sphere> bestresult;
 	auto loss = [&](Sphere s){return sov(mesh,s);};
-	// initialize
+	// sample points
 	console.log("initializing...  ns:",ns);
-	PointSet innerpoints = get_inner_points(mesh, npoint/2);
-	PointSet surfacepoints = get_surface_points(mesh, npoint/2);
+	PointSet innerpoints = get_inner_points(mesh, ninner);
+	PointSet surfacepoints = get_surface_points(mesh, nsurface);
 	visualize_with_mesh(surfacepoints, 0.02);
-	std::vector<vec3f> center;
-	// iterate over 3 steps
-	std::vector<Sphere> sphere;
-	std::vector<PointSet> points;
-	auto checkresult = [&](){
+
+	auto checkresult = [&](const std::vector<Sphere>& sphere){
 		double sumloss = 0;
 		for (int i=0; i<ns; ++i)
 			sumloss += loss(sphere[i]);
 		console.log("TOTAL LOSS:", sumloss);
+		if (sumloss < 0) {
+			console.warn("NEGATIVE LOSS!");
+			throw "wtf";
+		}
 		// save best result so far
 		if (sumloss < bestsumloss) {
 			bestsumloss = sumloss;
@@ -145,76 +146,74 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int
 		}
 		return sumloss;
 	};
-	console.log("optimizing...");
-	center.clear();
-	std::sample(innerpoints.begin(), innerpoints.end(), std::back_inserter(center), ns, std::mt19937(rand()));
-	for (int n_trial = 0; n_trial < 1; ++n_trial) // allowd number of jumping to higher loss
-	{
-		double outer_bestloss = INF;
-		for (int iter_a=0; iter_a<100; ++iter_a) {
-			double inner_bestloss = INF;
-			for (int iter_b=0; iter_b<100; ++iter_b) {
-				// step 1: point assignment
-				console.time("point assignment");
-				std::tie(sphere, points) = points_assign(center, concat(innerpoints, surfacepoints), loss);
-				console.timeEnd("point assignment");
-				{
-					double sumloss = checkresult();
-					if (sumloss > inner_bestloss - 1e-5) break;
-					inner_bestloss = sumloss;
-				}
-				// step 2: fitting & save results
-				console.time("sphere fit");
-				for (int i=0; i<ns; ++i) {
-					sphere[i] = sphere_fit(sphere[i], points[i], loss);
-					center[i] = sphere[i].center;
-				}
-				console.timeEnd("sphere fit");
-				{
-					double sumloss = checkresult();
-					if (sumloss > inner_bestloss - 1e-5) break;
-					inner_bestloss = sumloss;
-				}
+	auto step12 = [&](std::vector<vec3f> center) {
+		console.time("point assignment");
+		auto [sphere, points] = points_assign(center, concat(innerpoints, surfacepoints), loss);
+		console.timeEnd("point assignment");
+		console.time("sphere fit");
+		for (int i=0; i<ns; ++i)
+			sphere[i] = sphere_fit(sphere[i], points[i], loss);
+		console.timeEnd("sphere fit");
+		return std::make_tuple(sphere, points);
+	};
+	auto getcenter = [](std::vector<Sphere> sphere) {
+		std::vector<vec3f> center;
+		for (int i=0; i<sphere.size(); ++i)
+			center.push_back(sphere[i].center);
+		return center;
+	};
+	auto step3 = [&](std::vector<Sphere> sphere, std::vector<PointSet> points) {
+		console.log("teleporting...");
+		teleport(sphere, points, loss);
+		return step12(getcenter(sphere));
+	};
+	auto getrandomcenter = [&](){
+		std::vector<vec3f> center;
+		std::sample(innerpoints.begin(), innerpoints.end(), std::back_inserter(center), ns, std::mt19937(rand()));
+		return center;
+	};
+	// random initialize
+	auto [sphere, points] = step12(getrandomcenter());
+	double curloss = checkresult(sphere);
+	// iterate 3 steps
+	console.info("optimizing...");
+	while (true) {
+		auto [sphere1, points1] = step12(getcenter(sphere));
+		double loss1 = checkresult(sphere1);
+		if (loss1 < curloss) {
+			curloss = loss1;
+			sphere = sphere1;
+			points = points1;
+		}
+		else {
+			auto [sphere2, points2] = step3(sphere, points);
+			double loss2 = checkresult(sphere2);
+			if (loss2 < curloss) {
+				curloss = loss2;
+				sphere = sphere2;
+				points = points2;
 			}
-			if (inner_bestloss > outer_bestloss - 1e-5) {
+			else {
 				break;
 			}
-			outer_bestloss = inner_bestloss;
-			// step 3: teleportation
-			console.time("teleportation");
-			teleport(sphere, points, loss);
-			for (int i=0; i<ns; ++i)
-				center[i] = sphere[i].center;
-			console.timeEnd("teleportation");
-			visualize(bestresult);
 		}
 	}
 	// final iteration
-	console.log("final iteration...");
-	for (int i=0; i<ns; ++i) {
-		center[i] = bestresult[i].center;
-	}
-	double inner_bestloss = INF;
-	for (int iter_b=0; iter_b<100; ++iter_b) {
-		// step 1: point assignment
-		console.time("point assignment");
-		std::tie(sphere, points) = points_assign(center, concat(innerpoints, surfacepoints), loss);
-		console.timeEnd("point assignment");
-		// step 2: fitting & save results
-		console.time("sphere fit");
-		for (int i=0; i<ns; ++i) {
-			sphere[i] = sphere_fit(sphere[i], points[i], loss);
-			center[i] = sphere[i].center;
+	console.info("final iteration...");
+	curloss = checkresult(bestresult);
+	while (true) {
+		auto [sphere1, points1] = step12(getcenter(bestresult));
+		double loss1 = checkresult(sphere1);
+		if (loss1 < curloss) {
+			curloss = loss1;
+			bestresult = sphere1;
 		}
-		console.timeEnd("sphere fit");
-		{
-			double sumloss = checkresult();
-			if (sumloss > inner_bestloss - 1e-5) break;
-			inner_bestloss = sumloss;
+		else {
+			break;
 		}
 	}
 	// final expanding
-	console.log("final expanding...");
+	console.info("final expanding...");
 	PointSet finalpoints = get_surface_points(mesh, 100000);
 	for (auto p: finalpoints) {
 		auto iter = argmax(bestresult, [&](Sphere s){
@@ -244,7 +243,7 @@ int main(int argc, char* argv[])
 	int np = 10000;
 	if (argc > 3) np = atoi(argv[3]);
 
-	auto spheres = sphere_set_approximate(mesh, ns, np);
+	auto spheres = sphere_set_approximate(mesh, ns, 8000, 2000);
 
 	console.log("Evaluating...");
 	console.info("Relative Outside Volume:", volume(spheres)/volume(mesh)-1);
