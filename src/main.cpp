@@ -118,6 +118,22 @@ void teleport(std::vector<Sphere>& sphere, std::vector<PointSet>& points, std::f
 	*to_split = Sphere(p2, 0);
 }
 
+// Note: radii are invalidated after teleportation
+void teleport_n(std::vector<Sphere>& sphere, std::vector<PointSet>& points, std::function<double(Sphere)> loss)
+{
+	auto t = unique_volume(sphere);
+	auto to_remove = sphere.begin() + (argmax(t, [](double a){return -a;}) - t.begin());
+	auto to_split = argmax(sphere, loss);
+	if (to_remove == to_split) {
+		console.warn("to_remove = to_split");
+		return;
+	}
+	int index_to_split = to_split - sphere.begin();
+	auto [p1,p2] = farthest_points_apart(points[index_to_split]);
+	// replace these 2 spheres with the splited
+	*to_remove = Sphere(p1, 0);
+	*to_split = Sphere(p2, 0);
+}
 
 std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int ninner, int nsurface)
 {
@@ -171,8 +187,16 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int
 	};
 	auto step3 = [&](std::vector<Sphere> sphere, std::vector<PointSet> points) {
 		console.log("teleporting...");
+		auto sphere_b = sphere;
+		auto points_b = points;
 		teleport(sphere, points, loss);
-		return step12(getcenter(sphere));
+		teleport_n(sphere_b, points_b, loss);
+		auto a = step12(getcenter(sphere));
+		auto b = step12(getcenter(sphere_b));
+		if (checkresult(std::get<0>(a)) < checkresult(std::get<0>(b)))
+			return a;
+		else
+			return b;
 	};
 	auto getrandomcenter = [&](){
 		std::vector<vec3f> center;
@@ -203,13 +227,13 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int
 				i = 1; // next step: step1
 			}
 			else {
-				if (risecnt < 2) {
+				if (risecnt < 10) {
 					curloss = loss2;
 					sphere = sphere2;
 					points = points2;
 					i = 1; // next step: step1
 					risecnt++;
-					console.log("accepting worsening mutation");
+					console.log("accepting worsening mutation...");
 				}
 				else {
 					break;
@@ -218,7 +242,18 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int
 		}
 	}
 	// final iteration
-	points = {};
+	points = std::vector<PointSet>(ns);
+	for (auto p: concat(innerpoints, surfacepoints)) {
+		bool acc = false;
+		for (int i=0; i<ns; ++i)
+			if (norm(p - bestresult[i].center) <= bestresult[i].radius)
+			{
+				acc = true;
+				points[i].push_back(p);
+				break;
+			}
+		if (not acc) console.warn("final allocation failed");
+	}
 	console.info("final iteration...");
 	curloss = checkresult(bestresult);
 	while (true) {
@@ -233,7 +268,6 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int
 			break;
 		}
 	}
-	if (points.empty()) console.error("WTF"); // TODO
 	// final expanding
 	visualize(bestresult);
 	console.info("final expanding...");
@@ -269,7 +303,7 @@ int main(int argc, char* argv[])
 	int np = 10000;
 	if (argc > 3) np = atoi(argv[3]);
 
-	auto spheres = sphere_set_approximate(mesh, ns, 8000, 2000);
+	auto spheres = sphere_set_approximate(mesh, ns, 10000, 5000);
 
 	console.log("Evaluating...");
 	console.info("Relative Outside Volume:", volume(spheres)/volume(mesh)-1);
