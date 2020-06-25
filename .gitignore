@@ -3,3 +3,4 @@ main
 *.dSYM
 *.gch
 scene.json
+*.o
