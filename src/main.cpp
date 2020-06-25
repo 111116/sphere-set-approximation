@@ -145,11 +145,11 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int
 		}
 		return sumloss;
 	};
-	for (int n_trial = 0; n_trial < 1; ++n_trial)
+	console.log("optimizing...");
+	center.clear();
+	std::sample(innerpoints.begin(), innerpoints.end(), std::back_inserter(center), ns, std::mt19937(rand()));
+	for (int n_trial = 0; n_trial < 1; ++n_trial) // allowd number of jumping to higher loss
 	{
-		console.log("optimizing...");
-		center.clear();
-		std::sample(innerpoints.begin(), innerpoints.end(), std::back_inserter(center), ns, std::mt19937(rand()));
 		double outer_bestloss = INF;
 		for (int iter_a=0; iter_a<100; ++iter_a) {
 			double inner_bestloss = INF;
@@ -213,6 +213,18 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int
 			inner_bestloss = sumloss;
 		}
 	}
+	// final expanding
+	console.log("final expanding...");
+	PointSet finalpoints = get_surface_points(mesh, 100000);
+	for (auto p: finalpoints) {
+		auto iter = argmax(bestresult, [&](Sphere s){
+			return -std::max(0.0,norm(p-s.center)-s.radius);});
+		iter->radius = std::max(iter->radius, norm(p - iter->center));
+		points[iter - bestresult.begin()].push_back(p);
+	}
+	for (int i=0; i<ns; ++i) {
+		bestresult[i] = sphere_fit(bestresult[i], points[i], loss);
+	}
 	visualize(bestresult);
 	return bestresult;
 }
@@ -224,6 +236,7 @@ int main(int argc, char* argv[])
 		console.error("Usage:", argv[0], "<obj> <n_sphere> [n_point = 10000]");
 		return 1;
 	}
+	srand(19260817);
 	visualizer_mesh_filename = argv[1];
 	RTcore::Mesh mesh = RTcore::objmesh(argv[1]);
 	test_all_normal_outward(mesh);
