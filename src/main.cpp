@@ -12,22 +12,27 @@ int main(int argc, char* argv[])
 {
 	if (argc <= 2)
 	{
-		console.error("Usage:", argv[0], "<obj> <n_sphere> [n_point = 10000]");
+		console.error("Usage:", argv[0], "<obj> <n_sphere>");
 		return 1;
 	}
-	srand(19260817);
-	
+
 	visualizer_mesh_filename = argv[1];
 	RTcore::Mesh mesh = RTcore::objmesh(argv[1]);
 	test_all_normal_outward(mesh);
-	int ns = atoi(argv[2]);
-	int np = 10000;
-	if (argc > 3) np = atoi(argv[3]);
 
-	auto spheres = sphere_set_approximate(mesh, ns, 10000, 5000, 10);
+	int n_sphere = atoi(argv[2]);
+	int n_innersample = 10000;
+	int n_surfacesample = 4000;
+	int n_finalsample = 100000;
+	int n_mutate = 10;
+	int seed = 19260817;
 
-	console.log("Evaluating...");
-	console.info("Relative Outside Volume:", volume(spheres)/volume(mesh)-1);
+	srand(seed);
+	auto spheres = sphere_set_approximate(mesh, n_sphere, n_innersample, n_surfacesample, n_finalsample, n_mutate);
+
 	for (auto s: spheres)
 		std::cout << s.center << " " << s.radius << std::endl;
+
+	console.log("Evaluating...");
+	console.info("Relative Outside Volume (Er):", volume(spheres)/volume(mesh)-1);
 }
