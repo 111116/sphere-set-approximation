@@ -6,6 +6,7 @@
 #include <utility>
 #include "math/vecmath.hpp"
 #include "rtcore/mesh.hpp"
+#include "sphere.hpp"
 
 typedef std::vector<vec3f> PointSet;
 
