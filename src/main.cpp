@@ -146,21 +146,28 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int
 		}
 		return sumloss;
 	};
-	auto step12 = [&](std::vector<vec3f> center) {
+	auto getcenter = [](std::vector<Sphere> sphere) {
+		std::vector<vec3f> center;
+		for (int i=0; i<sphere.size(); ++i)
+			center.push_back(sphere[i].center);
+		return center;
+	};
+	auto step1 = [&](std::vector<vec3f> center) {
 		console.time("point assignment");
 		auto [sphere, points] = points_assign(center, concat(innerpoints, surfacepoints), loss);
 		console.timeEnd("point assignment");
+		return std::make_tuple(sphere, points);
+	};
+	auto step2 = [&](std::vector<Sphere> sphere, std::vector<PointSet> points) {
 		console.time("sphere fit");
 		for (int i=0; i<ns; ++i)
 			sphere[i] = sphere_fit(sphere[i], points[i], loss);
 		console.timeEnd("sphere fit");
 		return std::make_tuple(sphere, points);
 	};
-	auto getcenter = [](std::vector<Sphere> sphere) {
-		std::vector<vec3f> center;
-		for (int i=0; i<sphere.size(); ++i)
-			center.push_back(sphere[i].center);
-		return center;
+	auto step12 = [&](std::vector<vec3f> center) {
+		auto [sphere, points] = step1(center);
+		return step2(sphere, points);
 	};
 	auto step3 = [&](std::vector<Sphere> sphere, std::vector<PointSet> points) {
 		console.log("teleporting...");
@@ -177,10 +184,11 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int
 	double curloss = checkresult(sphere);
 	// iterate 3 steps
 	console.info("optimizing...");
-	while (true) {
-		auto [sphere1, points1] = step12(getcenter(sphere));
+	int risecnt = 0;
+	for (int i=0;; i++) {
+		auto [sphere1, points1] = (i%2==0)? step1(getcenter(sphere)): step2(sphere, points);
 		double loss1 = checkresult(sphere1);
-		if (loss1 < curloss) {
+		if (loss1 < curloss - 1e-6) {
 			curloss = loss1;
 			sphere = sphere1;
 			points = points1;
@@ -188,12 +196,20 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int
 		else {
 			auto [sphere2, points2] = step3(sphere, points);
 			double loss2 = checkresult(sphere2);
-			if (loss2 < curloss) {
+			if (loss2 < curloss - 1e-6) {
 				curloss = loss2;
 				sphere = sphere2;
 				points = points2;
+				i = 1; // next step: step1
 			}
 			else {
+				if (risecnt < 10) {
+					curloss = loss2;
+					sphere = sphere2;
+					points = points2;
+					i = 1; // next step: step1
+					risecnt++;
+				}
 				break;
 			}
 		}
@@ -204,7 +220,7 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int
 	while (true) {
 		auto [sphere1, points1] = step12(getcenter(bestresult));
 		double loss1 = checkresult(sphere1);
-		if (loss1 < curloss) {
+		if (loss1 < curloss - 1e-6) {
 			curloss = loss1;
 			bestresult = sphere1;
 		}
