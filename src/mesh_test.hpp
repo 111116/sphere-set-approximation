@@ -24,3 +24,18 @@ void test_all_normal_outward(const RTcore::Mesh& mesh)
 		}
 	}
 }
+
+void fix_normal(const RTcore::Mesh& mesh)
+{
+	for (auto t: mesh.list)
+	{
+		vec3f p = (t->v1 + t->v2 + t->v3)/3 + 0.01 * norm(t->v1-t->v2) * t->planeNormal;
+		bool out = 1;
+		for (int i=0; i<5; ++i)
+			out &= !point_in_mesh(p, mesh);
+		if (!out) {
+			t->planeNormal = -t->planeNormal;
+		}
+	}
+}
+

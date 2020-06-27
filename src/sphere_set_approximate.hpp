@@ -207,7 +207,7 @@ void teleport_n(std::vector<Sphere>& sphere, std::vector<PointSet>& points, std:
 	*to_split = Sphere(p2, 0);
 }
 
-std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int ninner, int nsurface, int n_finalsample, int n_mutate)
+std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& originalmesh, const RTcore::Mesh& manifold, int ns, int ninner, int nsurface, int n_finalsample, int n_mutate)
 {
 	double bestsumloss = INF;
 	std::vector<Sphere> bestresult;
