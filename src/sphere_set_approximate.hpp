@@ -211,11 +211,11 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& originalmesh, con
 {
 	double bestsumloss = INF;
 	std::vector<Sphere> bestresult;
-	auto loss = [&](Sphere s){return sov(mesh,s);};
+	auto loss = [&](Sphere s){return sov(manifold,s);};
 	// sample points
 	console.log("initializing...  ns:",ns);
-	PointSet innerpoints = get_inner_points(mesh, ninner);
-	PointSet surfacepoints = get_surface_points(mesh, nsurface);
+	PointSet innerpoints = get_inner_points(originalmesh, ninner);
+	PointSet surfacepoints = get_surface_points(originalmesh, nsurface);
 	visualize_with_mesh(surfacepoints, 0.02);
 
 	auto checkresult = [&](const std::vector<Sphere>& sphere){
@@ -343,7 +343,7 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& originalmesh, con
 	// final expanding
 	visualize(bestresult);
 	console.info("final expanding to cover all triangles...");
-	PointSet finalpoints = get_surface_points(mesh, n_finalsample);
+	PointSet finalpoints = get_surface_points(originalmesh, n_finalsample);
 	for (auto p: finalpoints) {
 		auto iter = argmax(bestresult, [&](Sphere s){
 			return -std::max(0.0,norm(p-s.center)-s.radius);});

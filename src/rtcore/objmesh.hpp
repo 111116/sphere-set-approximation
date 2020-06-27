@@ -86,7 +86,6 @@ Mesh objmesh(const char* filename)
 					// ignore triangles of zero surface area
 					if (cross(vv[l-1]-vv[0],vv[l]-vv[0]) != vec3f(0)) {
 						if (recompute_normal) {
-							console.warn("Vertex normal isn't given");
 							faces.push_back(new Triangle(vv[0], vv[l-1], vv[l]));
 						}
 						else {
