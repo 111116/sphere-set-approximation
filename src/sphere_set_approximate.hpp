@@ -214,7 +214,7 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& originalmesh, con
 	auto loss = [&](Sphere s){return sov(manifold,s);};
 	// sample points
 	console.log("initializing...  ns:",ns);
-	PointSet innerpoints = get_inner_points(originalmesh, ninner);
+	PointSet innerpoints = get_inner_points(manifold, ninner);
 	PointSet surfacepoints = get_surface_points(originalmesh, nsurface);
 	visualize_with_mesh(surfacepoints, 0.02);
 

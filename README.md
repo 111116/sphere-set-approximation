@@ -2,13 +2,15 @@
 
 **WORK IN PROGRESS**
 
-Approximate a mesh by bounding it with a set of spheres.
+Approximate a mesh by bounding it with a set of spheres, which can be used for collision detection, shadowing, etc.
 
-The program requires an original mesh and a simplified manifold version of the mesh, which can be generated from the original mesh using [hjwdzh/Manifold](https://github.com/hjwdzh/Manifold). The sphere set is constrained to cover the original mesh, while minimizing its redundant volume, which is calculated using the manifold mesh.
+![demo](demo.jpg)
+
+The program requires an original mesh and a simplified manifold version of the mesh, which can be generated from the original mesh using [hjwdzh/Manifold](https://github.com/hjwdzh/Manifold). The original mesh is used for surface constraint, while the manifold mesh is used for volume constraint & redundant volume optimization.
 
 You may try with different seeds to get better result.
 
-### Usage
+## Usage
 
 ```bash
 cd src
@@ -20,7 +22,9 @@ It outputs to `stdout` and logs to `stderr`.
 
 The algorithm runs quite slow (proportional to number of triangular faces of the manifold).
 
-### Algorithm
+The manifold must be closed and orientable.
+
+## Algorithm
 
 We use method described in
 
