@@ -1,5 +1,6 @@
 #include <vector>
 #include <algorithm>
+#include <map>
 
 #include "sov.hpp"
 #include "rtcore/mesh.hpp"
@@ -7,6 +8,79 @@
 #include "util.hpp"
 #include "pointset.hpp"
 #include "powell.hpp"
+
+
+std::tuple<std::vector<Sphere>, std::vector<PointSet>>
+	points_assign_MO(const std::vector<vec3f>& center, const PointSet& points, std::function<double(Sphere)> loss)
+{
+	// initialize
+	const int n = center.size();
+	std::vector<Sphere> sphere;
+	std::vector<double> curloss(n,0);
+	std::vector<PointSet> cluster(n);
+	for (int i=0; i<n; ++i) {
+		sphere.push_back(Sphere(center[i], 0));
+	}
+	// sorted points
+	PointSet psorted;
+	{
+		std::vector<std::pair<double, vec3f>> ps;
+		for (auto p: points) {
+			double minsqrdist = INF;
+			for (auto c: center)
+				minsqrdist = std::min(minsqrdist, sqrlen(c - p));
+			ps.push_back({minsqrdist, p});
+		}
+		std::sort(ps.begin(), ps.end(), [](const std::pair<double, vec3f>& a, const std::pair<double, vec3f>& b){return a.first < b.first;});
+		for (auto pair: ps)
+			psorted.push_back(pair.second);
+	}
+	// cached loss values (lower bound is looked up)
+	std::vector<std::map<double,double>> cache(n);
+	for (int i=0; i<n; ++i)
+		cache[i][0] = 0;
+	auto eval = [&](int id, const vec3f& p) {
+		double r = norm(p - center[id]);
+		double t = loss(Sphere(center[id], r));
+		cache[id][r] = t;
+		return t;
+	};
+	// assign all points
+	for (auto p: psorted)
+	{
+		// find sphere of minimum loss increment
+		int best = 0;
+		double bestdelta = INF;
+		std::vector<double> lower_bound(n);
+		for (int i=0; i<n; ++i) {
+			lower_bound[i] = std::prev(cache[i].upper_bound(norm(p - center[i]))) -> second;
+			double incre = std::max(0.0, lower_bound[i] - curloss[i]);
+			if (incre < bestdelta || (incre == bestdelta && norm(p-center[i]) < norm(p-center[best]))) {
+				bestdelta = incre;
+				best = i;
+			}
+		}
+		// now we have the best candidate according to lower bound of increase in loss
+		bestdelta = std::max(0.0, eval(best, p) - curloss[best]);
+		for (int i=0; i<n; ++i) {
+			if (i != best && lower_bound[i] - curloss[i] < bestdelta) {
+				double t = eval(i, p);
+				double incre = std::max(0.0, t - curloss[i]);
+				if (incre < bestdelta || (incre == bestdelta && norm(p-center[i]) < norm(p-center[best]))) {
+					bestdelta = incre;
+					best = i;
+				}
+			}
+		}
+		// console.log("assign to",best," incre",bestdelta);
+		// add this point to best cluster
+		cluster[best].push_back(p);
+		sphere[best].radius = std::max(sphere[best].radius, norm(p - center[best]));
+		curloss[best] = std::max(curloss[best], cache[best][norm(p - center[best])]);
+	}
+	return {sphere, cluster};
+}
+
 
 std::tuple<std::vector<Sphere>, std::vector<PointSet>>
 	points_assign(const std::vector<vec3f>& center, const PointSet& points, std::function<double(Sphere)> loss)
@@ -268,7 +342,7 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int
 	}
 	// final expanding
 	visualize(bestresult);
-	console.info("final expanding...");
+	console.info("final expanding to cover all triangles...");
 	PointSet finalpoints = get_surface_points(mesh, n_finalsample);
 	for (auto p: finalpoints) {
 		auto iter = argmax(bestresult, [&](Sphere s){
@@ -281,7 +355,26 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& mesh, int ns, int
 		checkContain(bestresult[i], points[i]);
 		bestresult[i] = sphere_fit(bestresult[i], points[i], loss);
 	}
-	checkresult(bestresult);
+	curloss = checkresult(bestresult);
+	visualize(bestresult);
+	PointSet allpoints;
+	for (auto p: points)
+		allpoints = concat(allpoints, p);
+	while (true) {
+		console.time("point assignment");
+		auto [s1, p1] = points_assign(getcenter(bestresult), allpoints, loss);
+		console.timeEnd("point assignment");
+		auto [sphere1, points1] = step2(s1, p1);
+		double loss1 = checkresult(sphere1);
+		if (loss1 < curloss - 1e-6) {
+			curloss = loss1;
+			bestresult = sphere1;
+			points = points1;
+		}
+		else {
+			break;
+		}
+	}
 	visualize(bestresult);
 	return bestresult;
 }
