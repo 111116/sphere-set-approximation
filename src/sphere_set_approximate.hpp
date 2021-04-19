@@ -229,6 +229,7 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& originalmesh, con
 		}
 		// save best result so far
 		if (sumloss < bestsumloss) {
+			visualize(sphere, "preview.json");
 			bestsumloss = sumloss;
 			bestresult = sphere;
 		}
@@ -288,6 +289,7 @@ std::vector<Sphere> sphere_set_approximate(const RTcore::Mesh& originalmesh, con
 			curloss = loss1;
 			sphere = sphere1;
 			points = points1;
+			console.info("preview generated.");
 		}
 		else {
 			auto [sphere2, points2] = step3(sphere, points);
