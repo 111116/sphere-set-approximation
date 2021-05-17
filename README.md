@@ -35,9 +35,8 @@ with several minor changes:
 - bugfixes SOTV, which in this paper is overestimated in some cases
 - provides an analytic algorithm to solve swing volume
 - voxel size doesn't have to be manually specified
-- surface points are generated using best-candidate instead of random sampling 
-- different point assignment strategy
-- different teleportation strategy
+- better sample quality of surface points
+- other minor strategy optimizations
 
 #### paper abstract
 
